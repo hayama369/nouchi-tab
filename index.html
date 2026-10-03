@@ -6,16 +6,19 @@
   <title>脳内タブ</title>
 
   <!-- スマホの「ホーム画面に追加」でアプリっぽく開くための設定 -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="脳内タブ">
-  <meta name="theme-color" content="#16181f">
+  <meta name="theme-color" content="#17161f">
 
-  <!-- 文字：読みやすさ重視のUDフォント（BIZ UDPゴシック） -->
+  <!-- 文字：見出しは丸ゴシック、本文は読みやすさ重視のUDフォント -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -36,6 +39,15 @@
   <section id="screen-home" class="screen">
 
     <h1 class="question">いま何してる？</h1>
+
+    <!-- 「まだやってる？」の軽い確認（しばらく経ったときだけ出る） -->
+    <div id="check" class="check" hidden>
+      <p id="check-text"></p>
+      <div class="row">
+        <button type="button" id="btn-check-yes" class="btn btn-quiet btn-small">やってる</button>
+        <button type="button" id="btn-check-done" class="btn btn-quiet btn-small">終わった</button>
+      </div>
+    </div>
 
     <!-- いまの作業：未登録 or 変更中のときに出る入力欄 -->
     <form id="now-form" class="now-form" autocomplete="off">
@@ -58,8 +70,11 @@
       </div>
     </div>
 
-    <!-- いちばん大事なボタン -->
-    <button type="button" id="btn-capture" class="btn btn-primary btn-huge">＋ 思いついた</button>
+    <!-- いちばん大事なボタン（上にハルが座っている） -->
+    <div class="capture-wrap">
+      <div id="haru-home" title="ハル"></div>
+      <button type="button" id="btn-capture" class="btn btn-primary btn-huge">＋ 思いついた</button>
+    </div>
 
     <div class="home-foot">
       <button type="button" id="btn-lost" class="btn btn-quiet">わたし、何してた？</button>
@@ -67,15 +82,35 @@
         あとで見る<span id="later-count" class="count"></span>
       </button>
     </div>
+    <button type="button" id="btn-review" class="btn btn-ghost btn-small home-review">ふりかえり</button>
   </section>
 
   <!-- ===================== 2. 思いつき入力 ===================== -->
   <section id="screen-capture" class="screen" hidden>
-    <p class="screen-title">思いついた</p>
+    <p class="screen-title is-small">思いついた</p>
     <form id="capture-form" class="capture-form" autocomplete="off">
       <label for="capture-input" class="visually-hidden">思いついたこと</label>
       <textarea id="capture-input" class="field field-big" rows="3" enterkeyhint="done"
                 placeholder="なんでも。整理はあとで。"></textarea>
+
+      <!-- 添付した画像のプレビュー -->
+      <div id="capture-attach" class="attach" hidden>
+        <img id="capture-attach-img" alt="添付した画像">
+        <button type="button" id="btn-attach-remove" class="attach-remove" aria-label="画像を外す">×</button>
+      </div>
+
+      <!-- 声・画像（使わなくてもいい、おまけのボタン） -->
+      <div class="tools">
+        <button type="button" id="btn-voice" class="btn btn-tool" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          <span id="voice-label">声で入れる</span>
+        </button>
+        <button type="button" id="btn-image" class="btn btn-tool">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-8 9"/></svg>
+          画像
+        </button>
+      </div>
+
       <button type="submit" class="btn btn-primary btn-huge">退避</button>
       <button type="button" id="btn-capture-cancel" class="btn btn-ghost">やめる</button>
     </form>
@@ -83,7 +118,10 @@
 
   <!-- ===================== 2'. 退避完了 ===================== -->
   <section id="screen-saved" class="screen" hidden>
-    <p class="saved-msg">退避した。<br>元の作業に戻る？</p>
+    <div class="saved-top">
+      <p class="saved-msg">退避した。<br>元の作業に戻る？</p>
+      <div id="haru-saved" title="ハル"></div>
+    </div>
     <p id="saved-what" class="saved-what"></p>
 
     <div class="saved-now">
@@ -97,12 +135,18 @@
 
   <!-- ===================== 3. あとで見る ===================== -->
   <section id="screen-later" class="screen" hidden>
-    <div class="later-head">
-      <button type="button" id="btn-later-home" class="btn btn-quiet btn-small">← ホーム</button>
+    <div class="page-head">
+      <button type="button" class="btn btn-quiet btn-small" data-go="home">← ホーム</button>
       <h2 class="screen-title">あとで見る</h2>
     </div>
 
-    <p id="later-empty" class="empty" hidden>まだ何も退避してない。</p>
+    <label for="search" class="visually-hidden">さがす</label>
+    <input id="search" class="field field-search" type="search" placeholder="さがす" autocomplete="off">
+
+    <!-- 絞り込み：すべて／今日／カテゴリ… -->
+    <div id="filter-chips" class="chips" role="group" aria-label="絞り込み"></div>
+
+    <p id="later-empty" class="empty" hidden></p>
     <ul id="tab-list" class="tab-list"></ul>
 
     <!-- 完了したものは下にまとめて薄く表示 -->
@@ -112,11 +156,101 @@
     </details>
   </section>
 
+  <!-- ===================== 3'. 思いつきの詳細 ===================== -->
+  <section id="screen-detail" class="screen" hidden>
+    <div class="page-head">
+      <button type="button" id="btn-detail-back" class="btn btn-quiet btn-small">← 一覧</button>
+    </div>
+
+    <p id="detail-text" class="detail-text"></p>
+    <p id="detail-time" class="detail-time"></p>
+
+    <!-- 画像 -->
+    <div class="detail-section">
+      <img id="detail-image" class="detail-image" alt="添付した画像" hidden>
+      <div class="row">
+        <button type="button" id="btn-detail-image" class="btn btn-tool">画像を付ける</button>
+        <button type="button" id="btn-detail-image-remove" class="btn btn-tool" hidden>画像を外す</button>
+      </div>
+    </div>
+
+    <!-- カテゴリ -->
+    <div class="detail-section">
+      <h3 class="section-title">カテゴリ</h3>
+      <div id="cat-chips" class="chips" style="flex-wrap: wrap;"></div>
+      <form id="new-cat-form" class="new-cat" hidden autocomplete="off">
+        <label for="new-cat-input" class="visually-hidden">新しいカテゴリ</label>
+        <input id="new-cat-input" class="field" type="text" placeholder="例：絵／買い物／調べもの" enterkeyhint="done">
+        <button type="submit" class="btn btn-solid btn-small">付ける</button>
+      </form>
+    </div>
+
+    <!-- 関連 -->
+    <div class="detail-section">
+      <h3 class="section-title">関連してる思いつき</h3>
+      <ul id="link-list" class="link-list"></ul>
+      <button type="button" id="btn-link-add" class="btn btn-tool" style="align-self: flex-start;">＋ 関連づける</button>
+      <div id="picker" class="picker" hidden>
+        <label for="picker-search" class="visually-hidden">関連づける思いつきをさがす</label>
+        <input id="picker-search" class="field field-search" type="search" placeholder="どれとつなぐ？" autocomplete="off">
+        <ul id="picker-list" class="link-list"></ul>
+        <button type="button" id="btn-picker-close" class="btn btn-ghost btn-small">閉じる</button>
+      </div>
+    </div>
+
+    <div class="row detail-actions">
+      <button type="button" id="btn-detail-complete" class="btn btn-solid">完了</button>
+      <button type="button" id="btn-detail-delete" class="btn btn-ghost">削除</button>
+    </div>
+  </section>
+
+  <!-- ===================== 4. ふりかえり ===================== -->
+  <section id="screen-review" class="screen" hidden>
+    <div class="page-head">
+      <button type="button" class="btn btn-quiet btn-small" data-go="home">← ホーム</button>
+      <h2 class="screen-title">ふりかえり</h2>
+    </div>
+
+    <!-- 今日開いた脳内タブ -->
+    <div class="card">
+      <h3 class="section-title">今日ひらいた脳内タブ</h3>
+      <p class="big-number"><strong id="today-count">0</strong>個</p>
+      <ul id="today-list" class="mini-list"></ul>
+    </div>
+
+    <!-- 終わった作業の履歴 -->
+    <div class="card">
+      <h3 class="section-title">終わった作業</h3>
+      <p id="history-empty" class="note" hidden>「終わった」を押した作業がここに並ぶ。</p>
+      <ul id="history-list" class="mini-list"></ul>
+    </div>
+
+    <!-- 分析 -->
+    <div class="card">
+      <h3 class="section-title">よく出てくる言葉</h3>
+      <p id="words-empty" class="note" hidden></p>
+      <ul id="words" class="bars"></ul>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">思いつきやすい時間</h3>
+      <p id="hours-note" class="note"></p>
+      <div id="hours" class="hours" role="img"></div>
+      <div class="hour-axis"><span>0時</span><span>6時</span><span>12時</span><span>18時</span></div>
+    </div>
+
+    <div class="card" id="cats-card" hidden>
+      <h3 class="section-title">カテゴリ別</h3>
+      <ul id="cats" class="bars"></ul>
+    </div>
+  </section>
+
 </div>
 
 <!-- ===================== 迷子救済（全画面の上に重なる） ===================== -->
 <div id="lost" class="lost" hidden>
   <p id="lost-text" class="lost-text"></p>
+  <div id="haru-lost" title="ハル"></div>
   <button type="button" id="btn-return" class="btn btn-primary btn-huge">戻れ。</button>
 </div>
 
@@ -126,9 +260,18 @@
   <button type="button" id="toast-undo" class="toast-undo">取り消し</button>
 </div>
 
-<!-- 読み込む順番が大事：保存 → 表示 → 操作 -->
+<!-- 画像を選ぶための見えない部品（「画像」ボタンから呼ばれる） -->
+<input id="image-input" type="file" accept="image/*" hidden>
+
+<!-- 読み込む順番が大事：保存 → 部品 → 表示 → 操作 -->
 <script src="js/storage.js"></script>
+<script src="js/images.js"></script>
+<script src="js/haru.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/analysis.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/ui-later.js"></script>
+<script src="js/ui-review.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

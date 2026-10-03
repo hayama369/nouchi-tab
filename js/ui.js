@@ -1,24 +1,28 @@
 /* =========================================================
-   ui.js ― 画面の「表示」と「切り替え」を担当するファイル
+   ui.js ― 画面表示の「共通部分」を担当するファイル
    ---------------------------------------------------------
-   ・データを読んで、画面に書き出すだけ。
+   ・画面の切り替え、ホーム、退避完了、迷子救済、お知らせ、日時の表示形式。
+   ・「あとで見る」と詳細画面は js/ui-later.js、
+     「ふりかえり」は js/ui-review.js に分けてあります。
    ・ボタンを押した時に何をするか、は js/app.js 側に書いてあります。
-   ・表示される文言を変えたい場合は、ここか index.html を探してください。
    ========================================================= */
 
 const UI = (() => {
-  // id で要素を探す短縮形
   const $ = (id) => document.getElementById(id);
 
-  // いま「あとで見る」で開いている項目のid（タップで完了/削除が出る項目）
-  let openId = null;
-  // 削除ボタンを1回押して「本当に削除？」状態になっている項目のid
-  let armedDeleteId = null;
-  // お知らせ（トースト）を消すためのタイマー
   let toastTimer = null;
 
+  // ハル（3か所にいる）。init() で用意する
+  const haru = { home: null, saved: null, lost: null };
+
+  function init() {
+    haru.home = Haru.mount($('haru-home'));
+    haru.saved = Haru.mount($('haru-saved'));
+    haru.lost = Haru.mount($('haru-lost'));
+  }
+
   // ---------------------------------------------------------
-  // 画面の切り替え：name は 'home' / 'capture' / 'saved' / 'later'
+  // 画面の切り替え：'home' / 'capture' / 'saved' / 'later' / 'detail' / 'review'
   // ---------------------------------------------------------
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach((el) => {
@@ -29,31 +33,38 @@ const UI = (() => {
 
   // ---------------------------------------------------------
   // 1. ホーム画面
-  //    editing = true のときは「変更」中なので入力欄を出す
+  //   editing   … 「変更」中なら true（入力欄を出す）
+  //   showCheck … 「まだやってる？」を出すなら true
   // ---------------------------------------------------------
-  function renderHome(editing = false) {
+  function renderHome({ editing = false, showCheck = false } = {}) {
     const task = Storage.getCurrentTask();
     const showForm = !task || editing;
 
     $('now-form').hidden = !showForm;
     $('now-view').hidden = showForm;
-    // 「やめる」は変更中だけ出す（未登録のときは戻る先がないので出さない）
     $('btn-now-cancel').hidden = !(task && editing);
 
     if (task) $('now-text').textContent = task.text;
     $('now-input').value = editing && task ? task.text : '';
 
+    // 「まだやってる？」
+    $('check').hidden = !(task && showCheck && !editing);
+    if (task) $('check-text').textContent = '「' + task.text + '」、まだやってる？';
+
     // 「あとで見る」の横に、未完了の件数を小さく出す
     const open = Storage.getBrainTabs().filter((t) => !t.completed).length;
     $('later-count').textContent = open ? String(open) : '';
+
+    // 何もしてないとき、ハルは寝てる
+    haru.home.setSleeping(!task);
   }
 
   // ---------------------------------------------------------
-  // 2'. 退避完了画面：stashedText は今退避した内容
+  // 2'. 退避完了画面
   // ---------------------------------------------------------
-  function renderSaved(stashedText) {
+  function renderSaved(tab) {
     const task = Storage.getCurrentTask();
-    $('saved-what').textContent = '「' + stashedText + '」';
+    $('saved-what').textContent = '「' + tab.text + '」' + (tab.imageId ? '（画像つき）' : '');
 
     if (task) {
       $('saved-now-text').textContent = task.text;
@@ -62,100 +73,11 @@ const UI = (() => {
       $('saved-now-text').textContent = 'まだ決めてない。';
       $('btn-back').textContent = 'ホームへ';
     }
-  }
-
-  // ---------------------------------------------------------
-  // 3. あとで見る
-  // ---------------------------------------------------------
-  function renderLater() {
-    const tabs = Storage.getBrainTabs(); // すでに新しい順
-    const active = tabs.filter((t) => !t.completed);
-    const done = tabs.filter((t) => t.completed);
-
-    $('later-empty').hidden = tabs.length > 0;
-    fillList($('tab-list'), active);
-
-    $('done-box').hidden = done.length === 0;
-    $('done-count').textContent = String(done.length);
-    fillList($('done-list'), done);
-  }
-
-  // 一覧（ul）の中身を作り直す
-  function fillList(ul, tabs) {
-    ul.textContent = '';
-    tabs.forEach((tab) => ul.appendChild(buildItem(tab)));
-  }
-
-  // 1件分の見た目を作る
-  function buildItem(tab) {
-    const li = document.createElement('li');
-    li.className = 'tab-item' + (tab.completed ? ' is-done' : '') + (tab.id === openId ? ' is-open' : '');
-
-    // 本体（タップで開閉）
-    const main = document.createElement('button');
-    main.type = 'button';
-    main.className = 'tab-main';
-    main.dataset.action = 'open';
-    main.dataset.id = tab.id;
-    main.setAttribute('aria-expanded', tab.id === openId ? 'true' : 'false');
-
-    const text = document.createElement('span');
-    text.className = 'tab-text';
-    text.textContent = tab.text;
-
-    const time = document.createElement('time');
-    time.className = 'tab-time';
-    time.dateTime = new Date(tab.createdAt).toISOString();
-    time.textContent = formatDate(tab.createdAt);
-
-    main.append(text, time);
-    li.appendChild(main);
-
-    // 開いている項目だけ「完了」「削除」を出す
-    if (tab.id === openId) {
-      const actions = document.createElement('div');
-      actions.className = 'tab-actions';
-
-      const doneBtn = document.createElement('button');
-      doneBtn.type = 'button';
-      doneBtn.className = 'btn btn-solid btn-small';
-      doneBtn.dataset.action = 'complete';
-      doneBtn.dataset.id = tab.id;
-      doneBtn.textContent = tab.completed ? '未完了に戻す' : '完了';
-
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      const armed = tab.id === armedDeleteId;
-      delBtn.className = 'btn btn-small ' + (armed ? 'btn-danger' : 'btn-ghost');
-      delBtn.dataset.action = 'delete';
-      delBtn.dataset.id = tab.id;
-      // 誤タップ防止：1回目で「本当に削除」に変わり、2回目で消える
-      delBtn.textContent = armed ? '本当に削除' : '削除';
-
-      actions.append(doneBtn, delBtn);
-      li.appendChild(actions);
-    }
-    return li;
-  }
-
-  // 項目を開く／閉じる
-  function toggleOpen(id) {
-    openId = openId === id ? null : id;
-    armedDeleteId = null;
-    renderLater();
-  }
-
-  // 削除ボタンの「1回目押した」状態を管理
-  function isDeleteArmed(id) {
-    return armedDeleteId === id;
-  }
-  function armDelete(id) {
-    armedDeleteId = id;
-    renderLater();
-  }
-  function resetLaterState() {
-    openId = null;
-    armedDeleteId = null;
+    // ハルが受け取ってくれる
+    setTimeout(() => {
+      haru.saved.hop();
+      haru.saved.meow('にゃっ');
+    }, 150);
   }
 
   // ---------------------------------------------------------
@@ -164,7 +86,6 @@ const UI = (() => {
   function showLost() {
     const task = Storage.getCurrentTask();
     if (task) {
-      // 末尾に「。」が無ければ付ける（「〜描く。」のように言い切る）
       const t = task.text;
       $('lost-text').textContent = /[。.!！?？]$/.test(t) ? t : t + '。';
       $('btn-return').textContent = '戻れ。';
@@ -174,6 +95,7 @@ const UI = (() => {
     }
     $('lost').hidden = false;
     $('btn-return').focus();
+    setTimeout(() => haru.lost.meow('にゃ。'), 450);
   }
 
   function hideLost() {
@@ -204,34 +126,70 @@ const UI = (() => {
   }
 
   // ---------------------------------------------------------
-  // 日時を短く表示：「今日 12:14」「昨日 9:03」「10/1 9:03」
+  // 日時の表示形式
   // ---------------------------------------------------------
-  function formatDate(ms) {
-    const d = new Date(ms);
-    const now = new Date();
-    const hm = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const DAY = 24 * 60 * 60 * 1000;
+  const DAY = 24 * 60 * 60 * 1000;
 
-    if (ms >= startOfToday) return '今日 ' + hm;
-    if (ms >= startOfToday - DAY) return '昨日 ' + hm;
+  function startOfToday() {
+    const n = new Date();
+    return new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime();
+  }
+
+  /** 「12:14」 */
+  function formatTime(ms) {
+    const d = new Date(ms);
+    return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  /** 「今日」「昨日」「10/1」「2025/10/1」 */
+  function formatDay(ms) {
+    const d = new Date(ms);
+    const today = startOfToday();
+    if (ms >= today) return '今日';
+    if (ms >= today - DAY) return '昨日';
     const md = d.getMonth() + 1 + '/' + d.getDate();
-    if (d.getFullYear() === now.getFullYear()) return md + ' ' + hm;
-    return d.getFullYear() + '/' + md + ' ' + hm;
+    return d.getFullYear() === new Date().getFullYear() ? md : d.getFullYear() + '/' + md;
+  }
+
+  /** 「今日 12:14」 */
+  function formatDate(ms) {
+    return formatDay(ms) + ' ' + formatTime(ms);
+  }
+
+  /** 「1時間12分」「8分」 */
+  function formatDuration(ms) {
+    const min = Math.max(1, Math.round(ms / 60000));
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    if (!h) return m + '分';
+    return h + '時間' + (m ? m + '分' : '');
+  }
+
+  // ---------------------------------------------------------
+  // 小道具：要素を作る（el('p', 'クラス名', '文字')）
+  // ---------------------------------------------------------
+  function el(tag, className, text) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
   }
 
   return {
+    init,
+    haru,
     showScreen,
     renderHome,
     renderSaved,
-    renderLater,
-    toggleOpen,
-    isDeleteArmed,
-    armDelete,
-    resetLaterState,
     showLost,
     hideLost,
     isLostOpen,
     toast,
+    formatTime,
+    formatDay,
+    formatDate,
+    formatDuration,
+    startOfToday,
+    el,
   };
 })();
