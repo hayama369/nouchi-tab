@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>脳内タブ</title>
+
+  <!-- スマホの「ホーム画面に追加」でアプリっぽく開くための設定 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="脳内タブ">
+  <meta name="theme-color" content="#16181f">
+
+  <!-- 文字：読みやすさ重視のUDフォント（BIZ UDPゴシック） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!--
+  =========================================================
+  index.html ― 画面の「骨組み」だけを書くファイル
+  ---------------------------------------------------------
+  ・画面は <section class="screen"> で区切っています。
+    一度に表示されるのは1つだけ（切り替えは js/ui.js）。
+  ・文言（「いま何してる？」など）を変えたいときはここを直せばOK。
+  ・id="..." は JavaScript から探すための名前なので、変えないでください。
+  =========================================================
+-->
+<div class="app">
+
+  <!-- ===================== 1. ホーム画面 ===================== -->
+  <section id="screen-home" class="screen">
+
+    <h1 class="question">いま何してる？</h1>
+
+    <!-- いまの作業：未登録 or 変更中のときに出る入力欄 -->
+    <form id="now-form" class="now-form" autocomplete="off">
+      <label for="now-input" class="visually-hidden">いまやっていること</label>
+      <input id="now-input" class="field" type="text" enterkeyhint="done"
+             placeholder="例：春千夜のイラストを描く">
+      <div class="row">
+        <button type="submit" class="btn btn-solid">これをやる</button>
+        <button type="button" id="btn-now-cancel" class="btn btn-ghost" hidden>やめる</button>
+      </div>
+    </form>
+
+    <!-- いまの作業：登録済みのときに出る表示 -->
+    <div id="now-view" class="now-view" hidden>
+      <p class="label">いま：</p>
+      <p id="now-text" class="now-text"></p>
+      <div class="row">
+        <button type="button" id="btn-change" class="btn btn-quiet">変更</button>
+        <button type="button" id="btn-finish" class="btn btn-quiet">終わった</button>
+      </div>
+    </div>
+
+    <!-- いちばん大事なボタン -->
+    <button type="button" id="btn-capture" class="btn btn-primary btn-huge">＋ 思いついた</button>
+
+    <div class="home-foot">
+      <button type="button" id="btn-lost" class="btn btn-quiet">わたし、何してた？</button>
+      <button type="button" id="btn-later" class="btn btn-quiet">
+        あとで見る<span id="later-count" class="count"></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== 2. 思いつき入力 ===================== -->
+  <section id="screen-capture" class="screen" hidden>
+    <p class="screen-title">思いついた</p>
+    <form id="capture-form" class="capture-form" autocomplete="off">
+      <label for="capture-input" class="visually-hidden">思いついたこと</label>
+      <textarea id="capture-input" class="field field-big" rows="3" enterkeyhint="done"
+                placeholder="なんでも。整理はあとで。"></textarea>
+      <button type="submit" class="btn btn-primary btn-huge">退避</button>
+      <button type="button" id="btn-capture-cancel" class="btn btn-ghost">やめる</button>
+    </form>
+  </section>
+
+  <!-- ===================== 2'. 退避完了 ===================== -->
+  <section id="screen-saved" class="screen" hidden>
+    <p class="saved-msg">退避した。<br>元の作業に戻る？</p>
+    <p id="saved-what" class="saved-what"></p>
+
+    <div class="saved-now">
+      <p class="label">いま：</p>
+      <p id="saved-now-text" class="now-text now-text-xl"></p>
+    </div>
+
+    <button type="button" id="btn-back" class="btn btn-primary btn-huge">戻る</button>
+    <button type="button" id="btn-capture-more" class="btn btn-ghost">もう1つ思いついた</button>
+  </section>
+
+  <!-- ===================== 3. あとで見る ===================== -->
+  <section id="screen-later" class="screen" hidden>
+    <div class="later-head">
+      <button type="button" id="btn-later-home" class="btn btn-quiet btn-small">← ホーム</button>
+      <h2 class="screen-title">あとで見る</h2>
+    </div>
+
+    <p id="later-empty" class="empty" hidden>まだ何も退避してない。</p>
+    <ul id="tab-list" class="tab-list"></ul>
+
+    <!-- 完了したものは下にまとめて薄く表示 -->
+    <details id="done-box" class="done-box" hidden>
+      <summary>完了したもの<span id="done-count" class="count"></span></summary>
+      <ul id="done-list" class="tab-list"></ul>
+    </details>
+  </section>
+
+</div>
+
+<!-- ===================== 迷子救済（全画面の上に重なる） ===================== -->
+<div id="lost" class="lost" hidden>
+  <p id="lost-text" class="lost-text"></p>
+  <button type="button" id="btn-return" class="btn btn-primary btn-huge">戻れ。</button>
+</div>
+
+<!-- ===================== 小さなお知らせ（取り消しボタン付き） ===================== -->
+<div id="toast" class="toast" hidden>
+  <span id="toast-msg"></span>
+  <button type="button" id="toast-undo" class="toast-undo">取り消し</button>
+</div>
+
+<!-- 読み込む順番が大事：保存 → 表示 → 操作 -->
+<script src="js/storage.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

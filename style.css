@@ -1,0 +1,398 @@
+/* =========================================================
+   style.css ― 見た目（色・文字の大きさ・余白）を担当するファイル
+   ---------------------------------------------------------
+   ・色を変えたいときは、一番上の「色の設定」だけ直せば全体に反映されます。
+   ・基本はダークモード（端末の設定に関係なく暗い配色）。
+   レイアウト方針：1カラム・余白多め。上に「いま」、親指の届く下側に大きなボタン。
+   ========================================================= */
+
+/* ---------- 色と文字の設定（ダーク：基本） ---------- */
+:root {
+  --bg: #16181f;          /* 背景：わずかに青みのある墨色 */
+  --surface: #1f222b;     /* カード・入力欄の地 */
+  --surface-2: #2a2e39;   /* 少し強いボタンの地 */
+  --line: #333845;        /* 枠線 */
+  --fg: #eceae6;          /* 文字 */
+  --muted: #959aa8;       /* 薄い文字 */
+  --accent: #e4a9bb;      /* アクセント：くすんだ桜色 */
+  --on-accent: #2b1720;   /* アクセント上の文字 */
+  --accent-weak: rgba(228, 169, 187, 0.16);
+  --danger: #ef8a7e;
+  --on-danger: #2a1210;
+
+  --font-display: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  --font-body: 'BIZ UDPGothic', 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+
+  --radius: 16px;
+  color-scheme: dark;
+}
+
+/* ---------- ライトモード ----------
+   基本は常にダーク。明るい配色は data-theme="light" が付いたときだけ使う。
+   （端末設定に合わせたい場合は、ここを @media (prefers-color-scheme: light) で囲む） */
+:root[data-theme="light"] {
+  --bg: #f3f2f5;
+  --surface: #ffffff;
+  --surface-2: #e9e7ee;
+  --line: #d9d6df;
+  --fg: #1c1e25;
+  --muted: #666a77;
+  --accent: #a8475f;
+  --on-accent: #ffffff;
+  --accent-weak: rgba(168, 71, 95, 0.12);
+  --danger: #b3392d;
+  --on-danger: #ffffff;
+  color-scheme: light;
+}
+
+/* ---------- 土台 ---------- */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  max-width: 34rem;
+  min-height: 100%;
+  margin: 0 auto;
+  padding-inline: 20px;
+  padding-block: calc(28px + env(safe-area-inset-top, 0px)) calc(28px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+}
+
+/* 各画面：縦に並べて、画面いっぱいに伸ばす */
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+p, h1, h2 { margin: 0; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* ---------- 文字 ---------- */
+.question {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.1rem, 9vw, 2.8rem);
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+  padding-top: 0.5rem;
+}
+
+.label {
+  color: var(--muted);
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.now-text {
+  font-weight: 700;
+  font-size: clamp(1.6rem, 6.8vw, 2.2rem);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: auto-phrase;
+}
+.now-text-xl { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+
+.screen-title {
+  color: var(--muted);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.count {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-left: 0.5em;
+  padding: 0 0.45em;
+  border-radius: 999px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+}
+.count:empty { display: none; }
+
+/* ---------- ボタン ---------- */
+.btn {
+  appearance: none;
+  border: 1.5px solid transparent;
+  border-radius: 12px;
+  min-height: 3.25rem;
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--fg);
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.08s ease, background-color 0.15s ease;
+}
+.btn:active { transform: scale(0.98); }
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: var(--radius);
+}
+.btn-huge {
+  width: 100%;
+  min-height: 5.5rem;
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0.04em;
+}
+.btn-solid { background: var(--surface-2); }
+.btn-quiet { background: var(--surface); border-color: var(--line); }
+.btn-ghost { color: var(--muted); }
+.btn-danger { background: var(--danger); color: var(--on-danger); }
+.btn-small { min-height: 2.75rem; font-size: 1rem; }
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.row .btn { flex: 1; }
+
+/* ---------- 入力欄 ---------- */
+.field {
+  width: 100%;
+  font: inherit;
+  font-size: 1.3rem;           /* 16px以上にしてiPhoneの自動ズームを防ぐ */
+  color: var(--fg);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  padding: 0.95rem 1.1rem;
+}
+.field::placeholder { color: var(--muted); opacity: 0.8; }
+.field:focus { outline: none; border-color: var(--accent); }
+.field-big {
+  font-size: 1.5rem;
+  line-height: 1.5;
+  min-height: 9rem;
+  resize: none;
+}
+
+/* ---------- 1. ホーム ---------- */
+.now-form,
+.now-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.now-view .row { margin-top: 0.4rem; }
+
+/* 大きいボタンは画面の下側（親指の届く位置）へ寄せる */
+#btn-capture { margin-top: auto; }
+
+.home-foot {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr; /* 左のボタンの文字が長いので少し広く */
+  gap: 0.75rem;
+}
+/* 「わたし、何してた？」が狭い画面でも1行に収まるよう少しだけ詰める */
+.home-foot .btn {
+  padding-inline: 0.5rem;
+  font-size: 1rem;
+}
+
+/* ---------- 2. 思いつき入力 ---------- */
+.capture-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ---------- 2'. 退避完了 ---------- */
+.saved-msg {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(1.7rem, 7vw, 2.1rem);
+  line-height: 1.4;
+  padding-top: 0.5rem;
+}
+.saved-what {
+  color: var(--muted);
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+.saved-now {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem 1.4rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+#btn-back { margin-top: auto; }
+
+/* ---------- 3. あとで見る ---------- */
+.later-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 1.15rem;
+  padding: 3rem 0;
+  text-align: center;
+}
+
+.tab-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tab-item {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+}
+.tab-item.is-open { border-color: var(--accent); }
+
+.tab-main {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border-radius: 14px;
+}
+.tab-text {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.tab-time {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tab-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  padding: 0 1.15rem 1rem;
+}
+
+.tab-item.is-done .tab-text {
+  color: var(--muted);
+  font-weight: 400;
+  text-decoration: line-through;
+}
+
+.done-box summary {
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.75rem 0;
+  font-size: 1rem;
+}
+.done-box .tab-list { margin-top: 0.5rem; }
+
+/* ---------- 迷子救済 ---------- */
+.lost {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+  padding: calc(24px + env(safe-area-inset-top, 0px)) 24px calc(24px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  animation: lost-in 0.35s ease-out;
+}
+.lost-text {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.2rem, 10vw, 3.4rem);
+  line-height: 1.35;
+  max-width: 16em;
+  overflow-wrap: anywhere;
+  word-break: auto-phrase; /* 日本語を文節で折り返す（対応ブラウザのみ） */
+  text-wrap: balance;
+}
+.lost .btn { max-width: 22rem; }
+
+@keyframes lost-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---------- お知らせ ---------- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 20;
+  max-width: calc(100% - 32px);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem 0.7rem 1.3rem;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font-weight: 700;
+}
+.toast-undo {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+/* 動きを減らす設定の人にはアニメーションを出さない */
+@media (prefers-reduced-motion: reduce) {
+  .lost { animation: none; }
+  .btn { transition: none; }
+}
