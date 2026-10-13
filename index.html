@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261013">
 </head>
 <body>
 <!--
@@ -82,7 +82,10 @@
         あとで見る<span id="later-count" class="count"></span>
       </button>
     </div>
-    <button type="button" id="btn-review" class="btn btn-ghost btn-small home-review">ふりかえり</button>
+    <div class="home-sub">
+      <button type="button" id="btn-hitori" class="btn btn-ghost btn-small">ひとりごと</button>
+      <button type="button" id="btn-review" class="btn btn-ghost btn-small">ふりかえり</button>
+    </div>
   </section>
 
   <!-- ===================== 2. 思いつき入力 ===================== -->
@@ -204,6 +207,40 @@
     </div>
   </section>
 
+  <!-- ===================== 5. ひとりごと（1日1ページの日記帳） ===================== -->
+  <section id="screen-hitori" class="screen" hidden>
+    <div class="page-head">
+      <button type="button" class="btn btn-quiet btn-small" data-go="home">← ホーム</button>
+      <h2 class="screen-title">ひとりごと</h2>
+    </div>
+
+    <!-- ページめくり：‹ 前に書いた日　› 次に書いた日 -->
+    <div class="hitori-nav">
+      <button type="button" id="btn-hitori-prev" class="btn btn-quiet btn-small hitori-arrow" aria-label="前に書いた日">‹</button>
+      <div class="hitori-day">
+        <p id="hitori-date" class="hitori-date"></p>
+        <p id="hitori-sub" class="hitori-sub"></p>
+      </div>
+      <button type="button" id="btn-hitori-next" class="btn btn-quiet btn-small hitori-arrow" aria-label="次に書いた日">›</button>
+    </div>
+    <button type="button" id="btn-hitori-today" class="btn btn-ghost btn-small hitori-today" hidden>今日のページへ</button>
+
+    <!-- その日のページ（左の時刻、右にひとりごと） -->
+    <div class="hitori-page">
+      <p id="hitori-empty" class="hitori-empty" hidden></p>
+      <ol id="hitori-list" class="hitori-list"></ol>
+    </div>
+
+    <!-- 書くところ（今日のページだけ）。ハルが上に座って聞いてる -->
+    <form id="hitori-form" class="hitori-form" autocomplete="off">
+      <div id="haru-hitori" class="hitori-haru" title="ハル"></div>
+      <label for="hitori-input" class="visually-hidden">ひとりごと</label>
+      <textarea id="hitori-input" class="field hitori-input" rows="2" enterkeyhint="send"
+                placeholder="だれも見てない。思ったまま。"></textarea>
+      <button type="submit" class="btn btn-primary">つぶやく</button>
+    </form>
+  </section>
+
   <!-- ===================== 4. ふりかえり ===================== -->
   <section id="screen-review" class="screen" hidden>
     <div class="page-head">
@@ -264,14 +301,15 @@
 <input id="image-input" type="file" accept="image/*" hidden>
 
 <!-- 読み込む順番が大事：保存 → 部品 → 表示 → 操作 -->
-<script src="js/storage.js"></script>
-<script src="js/images.js"></script>
-<script src="js/haru.js"></script>
-<script src="js/voice.js"></script>
-<script src="js/analysis.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/ui-later.js"></script>
-<script src="js/ui-review.js"></script>
-<script src="js/app.js"></script>
+<script src="js/storage.js?v=20261013"></script>
+<script src="js/images.js?v=20261013"></script>
+<script src="js/haru.js?v=20261013"></script>
+<script src="js/voice.js?v=20261013"></script>
+<script src="js/analysis.js?v=20261013"></script>
+<script src="js/ui.js?v=20261013"></script>
+<script src="js/ui-later.js?v=20261013"></script>
+<script src="js/ui-review.js?v=20261013"></script>
+<script src="js/ui-hitori.js?v=20261013"></script>
+<script src="js/app.js?v=20261013"></script>
 </body>
 </html>

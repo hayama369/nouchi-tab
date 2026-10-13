@@ -19,6 +19,10 @@
    TaskHistory（「終わった」を押した作業の記録）
      { id, text, startedAt, finishedAt }
 
+   Mumble（ひとりごと・何件でも）
+     { id, text, createdAt,
+       paw }       … ハルが肉球を押していったら true
+
    時刻はすべて「1970年からのミリ秒」の数値です（Date.now() の値）。
    ========================================================= */
 
@@ -27,6 +31,7 @@ const Storage = (() => {
   const KEY_CURRENT = 'noutab.currentTask';
   const KEY_TABS = 'noutab.brainTabs';
   const KEY_HISTORY = 'noutab.taskHistory';
+  const KEY_MUMBLES = 'noutab.mumbles';
 
   // --- 内部用：安全に読み書きする小道具 ---------------------------
   function read(key, fallback) {
@@ -222,6 +227,50 @@ const Storage = (() => {
     write(KEY_TABS, list);
   }
 
+  // =========================================================
+  // Mumble（ひとりごと）
+  // =========================================================
+
+  /** 全部を古い順で取得 */
+  function getMumbles() {
+    return read(KEY_MUMBLES, []).sort((a, b) => a.createdAt - b.createdAt);
+  }
+
+  /** 1件追加（時刻はこの瞬間）。空なら何もしない */
+  function addMumble(text) {
+    const t = (text || '').trim();
+    if (!t) return null;
+    const m = { id: newId(), text: t, createdAt: Date.now(), paw: false };
+    const list = read(KEY_MUMBLES, []);
+    list.push(m);
+    write(KEY_MUMBLES, list);
+    return m;
+  }
+
+  /** ハルの肉球を付ける／外す */
+  function setMumblePaw(id, paw) {
+    const list = read(KEY_MUMBLES, []);
+    const m = list.find((x) => x.id === id);
+    if (m) m.paw = !!paw;
+    write(KEY_MUMBLES, list);
+  }
+
+  /** 1件削除。消したものを返す（取り消し用） */
+  function deleteMumble(id) {
+    const list = read(KEY_MUMBLES, []);
+    const removed = list.find((x) => x.id === id) || null;
+    write(KEY_MUMBLES, list.filter((x) => x.id !== id));
+    return removed;
+  }
+
+  /** 削除の取り消し */
+  function restoreMumble(m) {
+    if (!m) return;
+    const list = read(KEY_MUMBLES, []).filter((x) => x.id !== m.id);
+    list.push(m);
+    write(KEY_MUMBLES, list);
+  }
+
   return {
     getCurrentTask,
     setCurrentTask,
@@ -240,5 +289,10 @@ const Storage = (() => {
     getCategories,
     linkTabs,
     unlinkTabs,
+    getMumbles,
+    addMumble,
+    setMumblePaw,
+    deleteMumble,
+    restoreMumble,
   };
 })();

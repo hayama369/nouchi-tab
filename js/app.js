@@ -35,7 +35,9 @@
     if (name === 'later') LaterUI.renderList();
     if (name === 'review') ReviewUI.render();
     if (name === 'detail') LaterUI.renderDetail();
+    if (name === 'hitori') HitoriUI.render();
     UI.showScreen(name);
+    if (name === 'hitori') HitoriUI.scrollToEnd();
   }
 
   // 「まだやってる？」を出す頃か
@@ -311,6 +313,22 @@
   }
 
   // =========================================================
+  // 5. ひとりごと
+  // =========================================================
+  // 今日のページを開いて、すぐ書ける状態にする
+  // ※ スマホでキーボードを出すため、focus() はボタンを押した処理の中で直接呼ぶ
+  function openHitori() {
+    HitoriUI.reset();
+    go('hitori');
+    $('hitori-input').focus();
+  }
+
+  function postHitori(e) {
+    e.preventDefault();
+    HitoriUI.post();
+  }
+
+  // =========================================================
   // 迷子救済
   // =========================================================
   function returnFromLost() {
@@ -331,12 +349,14 @@
   }
 
   // URLの最後が #capture なら、いきなり入力画面を開く
+  // #hitori なら、いきなり「ひとりごと」を開く
   // （iPhoneの「ショートカット」アプリのウィジェットから開く用）
   function handleHash() {
-    if (location.hash === '#capture') {
-      history.replaceState(null, '', location.pathname + location.search);
-      openCapture();
-    }
+    const hash = location.hash;
+    if (hash !== '#capture' && hash !== '#hitori') return;
+    history.replaceState(null, '', location.pathname + location.search);
+    if (hash === '#capture') openCapture();
+    else openHitori();
   }
 
   // =========================================================
@@ -353,6 +373,7 @@
   on('btn-lost', 'click', UI.showLost);
   on('btn-later', 'click', openLater);
   on('btn-review', 'click', () => go('review'));
+  on('btn-hitori', 'click', openHitori);
 
   // 思いつき入力
   on('capture-form', 'submit', stash);
@@ -390,6 +411,15 @@
   // ふりかえり
   on('today-list', 'click', openClick);
 
+  // ひとりごと
+  on('hitori-form', 'submit', postHitori);
+  on('hitori-input', 'keydown', HitoriUI.keydown);
+  on('hitori-input', 'input', HitoriUI.grow);
+  on('hitori-list', 'click', HitoriUI.listClick);
+  on('btn-hitori-prev', 'click', (e) => HitoriUI.goTo(e.currentTarget.dataset.to));
+  on('btn-hitori-next', 'click', (e) => HitoriUI.goTo(e.currentTarget.dataset.to));
+  on('btn-hitori-today', 'click', HitoriUI.goToday);
+
   // 「← ホーム」ボタン（data-go="home"）
   document.querySelectorAll('[data-go]').forEach((b) =>
     b.addEventListener('click', () => go(b.dataset.go))
@@ -410,6 +440,7 @@
   window.addEventListener('storage', () => {
     if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
     if (current === 'later') LaterUI.renderList();
+    if (current === 'hitori') HitoriUI.render();
   });
 
   window.addEventListener('hashchange', handleHash);

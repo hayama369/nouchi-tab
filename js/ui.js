@@ -3,7 +3,7 @@
    ---------------------------------------------------------
    ・画面の切り替え、ホーム、退避完了、迷子救済、お知らせ、日時の表示形式。
    ・「あとで見る」と詳細画面は js/ui-later.js、
-     「ふりかえり」は js/ui-review.js に分けてあります。
+     「ふりかえり」は js/ui-review.js、「ひとりごと」は js/ui-hitori.js に分けてあります。
    ・ボタンを押した時に何をするか、は js/app.js 側に書いてあります。
    ========================================================= */
 
@@ -12,17 +12,18 @@ const UI = (() => {
 
   let toastTimer = null;
 
-  // ハル（3か所にいる）。init() で用意する
-  const haru = { home: null, saved: null, lost: null };
+  // ハル（4か所にいる）。init() で用意する
+  const haru = { home: null, saved: null, lost: null, hitori: null };
 
   function init() {
     haru.home = Haru.mount($('haru-home'));
     haru.saved = Haru.mount($('haru-saved'));
     haru.lost = Haru.mount($('haru-lost'));
+    haru.hitori = Haru.mount($('haru-hitori'));
   }
 
   // ---------------------------------------------------------
-  // 画面の切り替え：'home' / 'capture' / 'saved' / 'later' / 'detail' / 'review'
+  // 画面の切り替え：'home' / 'capture' / 'saved' / 'later' / 'detail' / 'review' / 'hitori'
   // ---------------------------------------------------------
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach((el) => {
