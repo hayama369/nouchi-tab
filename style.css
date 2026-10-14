@@ -1002,3 +1002,62 @@ p, h1, h2, h3 { margin: 0; }
   .haru-bubble { animation: none; }
   .btn { transition: none; }
 }
+
+/* ---------- 6. シール（手帳に貼る日記シール） ----------
+   できあがりは白い紙のテープに乗せて見せる（紙は配色に関係なく白）。 */
+.st-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+.st-strip {
+  width: 100%;
+  max-width: 384px;
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+.st-strip img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.st-save { width: 100%; max-width: 384px; margin-top: 0.4rem; font-family: var(--font-display); font-weight: 900; }
+.st-msg { margin: 0; min-height: 1.3em; font-size: 0.95rem; font-weight: 700; text-align: center; }
+.st-how { margin: 0; color: var(--muted); font-size: 0.85rem; text-align: center; max-width: 384px; }
+
+.st-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding: 1.2rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.st-field { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
+.st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 360px) { .st-two { grid-template-columns: 1fr; } }
+.st-input { font-size: 1.05rem; padding: 0.7rem 0.9rem; background: var(--bg); min-width: 0; }
+textarea.st-input { resize: vertical; }
+
+.st-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+.st-seg-2 { grid-template-columns: 1fr 1fr; }
+.st-seg button {
+  appearance: none;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  min-height: 2.9rem;
+  padding: 0.4rem 0.2rem;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+.st-seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.st-toggle { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; cursor: pointer; }
+.st-toggle input { width: 1.3rem; height: 1.3rem; accent-color: var(--accent); }
+
+.st-chips { flex-wrap: wrap; overflow: visible; }
+.st-add { display: flex; gap: 0.5rem; }
+.st-add .field { flex: 1; }
+.st-add .btn { flex: none; }

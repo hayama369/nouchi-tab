@@ -36,6 +36,7 @@
     if (name === 'review') ReviewUI.render();
     if (name === 'detail') LaterUI.renderDetail();
     if (name === 'hitori') HitoriUI.render();
+    if (name === 'sticker') StickerUI.render();
     UI.showScreen(name);
     if (name === 'hitori') HitoriUI.scrollToEnd();
   }
@@ -350,12 +351,14 @@
 
   // URLの最後が #capture なら、いきなり入力画面を開く
   // #hitori なら、いきなり「ひとりごと」を開く
+  // #sticker なら、いきなり「シール」を開く
   // （iPhoneの「ショートカット」アプリのウィジェットから開く用）
   function handleHash() {
     const hash = location.hash;
-    if (hash !== '#capture' && hash !== '#hitori') return;
+    if (hash !== '#capture' && hash !== '#hitori' && hash !== '#sticker') return;
     history.replaceState(null, '', location.pathname + location.search);
     if (hash === '#capture') openCapture();
+    else if (hash === '#sticker') go('sticker');
     else openHitori();
   }
 
@@ -374,6 +377,7 @@
   on('btn-later', 'click', openLater);
   on('btn-review', 'click', () => go('review'));
   on('btn-hitori', 'click', openHitori);
+  on('btn-sticker', 'click', () => go('sticker'));
 
   // 思いつき入力
   on('capture-form', 'submit', stash);
@@ -449,6 +453,7 @@
   // 起動
   // =========================================================
   UI.init();
+  StickerUI.init();
   $('btn-voice').hidden = !Voice.isSupported(); // 使えないブラウザではボタンを出さない
   go('home');
   handleHash();
