@@ -17,6 +17,9 @@
   const $ = (id) => document.getElementById(id);
   const on = (id, event, fn) => $(id).addEventListener(event, fn);
 
+  // 下のメニューを出す画面（ここにない画面ではメニューを隠す）
+  const TAB_SCREENS = ['home', 'hitori', 'review', 'sticker'];
+
   let current = 'home'; // いま表示中の画面
   let editing = false; // ホームで「変更」中か
   let pendingImageId = null; // 入力画面で付けた（まだ退避していない）画像
@@ -38,7 +41,26 @@
     if (name === 'hitori') HitoriUI.render();
     if (name === 'sticker') StickerUI.render();
     UI.showScreen(name);
+    updateTabbar(name);
     if (name === 'hitori') HitoriUI.scrollToEnd();
+  }
+
+  // 下のメニュー：いまの画面に印を付ける／メニューのない画面では隠す
+  function updateTabbar(name) {
+    const show = TAB_SCREENS.includes(name) && !UI.isLostOpen();
+    document.body.classList.toggle('has-tabbar', show);
+    $('tabbar').hidden = !show;
+    $('tabbar').querySelectorAll('.tab').forEach((b) => {
+      if (b.dataset.tab === name) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
+    });
+  }
+
+  function tabClick(e) {
+    const b = e.target.closest('[data-tab]');
+    if (!b || b.dataset.tab === current) return;
+    if (b.dataset.tab === 'hitori') openHitori();
+    else go(b.dataset.tab);
   }
 
   // 「まだやってる？」を出す頃か
@@ -316,12 +338,10 @@
   // =========================================================
   // 5. ひとりごと
   // =========================================================
-  // 今日のページを開いて、すぐ書ける状態にする
-  // ※ スマホでキーボードを出すため、focus() はボタンを押した処理の中で直接呼ぶ
+  // 今日のページを開く（キーボードは、入力欄を押したときに出る）
   function openHitori() {
     HitoriUI.reset();
     go('hitori');
-    $('hitori-input').focus();
   }
 
   function postHitori(e) {
@@ -375,9 +395,8 @@
   on('btn-capture', 'click', openCapture);
   on('btn-lost', 'click', UI.showLost);
   on('btn-later', 'click', openLater);
-  on('btn-review', 'click', () => go('review'));
-  on('btn-hitori', 'click', openHitori);
-  on('btn-sticker', 'click', () => go('sticker'));
+  // 下のメニュー
+  on('tabbar', 'click', tabClick);
 
   // 思いつき入力
   on('capture-form', 'submit', stash);

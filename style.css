@@ -15,9 +15,9 @@
   --line: #393549;        /* 枠線 */
   --fg: #efeaf1;          /* 文字 */
   --muted: #a09bb0;       /* 薄い文字 */
-  --accent: #eba9c1;      /* アクセント：さくら色 */
-  --on-accent: #2e1623;   /* アクセント上の文字 */
-  --accent-weak: rgba(235, 169, 193, 0.15);
+  --accent: #a9a8f2;      /* アクセント：藤色寄りの青紫 */
+  --on-accent: #17163a;   /* アクセント上の文字 */
+  --accent-weak: rgba(169, 168, 242, 0.16);
   --gold: #f2c450;        /* ハルの目の色（小さな差し色） */
   --danger: #ef8a7e;
   --on-danger: #2a1210;
@@ -44,9 +44,9 @@
   --line: #e0d6de;
   --fg: #251f29;
   --muted: #6d6575;
-  --accent: #b24d70;
+  --accent: #5652b8;
   --on-accent: #ffffff;
-  --accent-weak: rgba(178, 77, 112, 0.1);
+  --accent-weak: rgba(86, 82, 184, 0.1);
   --gold: #b07d12;
   --danger: #b3392d;
   --on-danger: #ffffff;
@@ -735,7 +735,7 @@ p, h1, h2, h3 { margin: 0; }
 .hitori-sub { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
 .hitori-today { align-self: center; margin-top: -0.8rem; }
 
-/* ノートのページ：時刻の右に、さくら色の縦線（ノートの余白線） */
+/* ノートのページ：時刻の右に、アクセント色の縦線（ノートの余白線） */
 .hitori-page {
   flex: 1;
   padding: 1.1rem 1.1rem 1.4rem 0.6rem;
@@ -761,13 +761,13 @@ p, h1, h2, h3 { margin: 0; }
 }
 .hitori-time {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 .hitori-text {
-  font-size: 1.15rem;
-  line-height: 1.65;
+  font-size: 1rem;
+  line-height: 1.7;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -824,7 +824,7 @@ p, h1, h2, h3 { margin: 0; }
   width: 62px;
 }
 .hitori-input {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   line-height: 1.5;
   min-height: 3.4rem;
   max-height: 10rem;
@@ -1061,3 +1061,44 @@ textarea.st-input { resize: vertical; }
 .st-add { display: flex; gap: 0.5rem; }
 .st-add .field { flex: 1; }
 .st-add .btn { flex: none; }
+
+/* ---------- 下のメニュー（ホーム・ひとりごと・ふりかえり・シール） ----------
+   画面の一番下に固定。メニューがある画面では、下にその分の余白を足す。 */
+:root { --tabbar-h: calc(4rem + env(safe-area-inset-bottom, 0px)); }
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9; /* 迷子救済（10）より下、お知らせ（20）より下 */
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 0.35rem 0.5rem env(safe-area-inset-bottom, 0px);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+.tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  min-height: 3.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  cursor: pointer;
+  border-radius: 14px;
+}
+.tab svg { width: 1.45rem; height: 1.45rem; }
+.tab[aria-current="page"] { color: var(--accent); }
+.tab[aria-current="page"] svg { stroke-width: 2.4; }
+body.has-tabbar .app { padding-bottom: calc(var(--tabbar-h) + 20px); }
+body.has-tabbar .hitori-form { bottom: var(--tabbar-h); }
+body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
