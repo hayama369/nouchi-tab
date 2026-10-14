@@ -36,12 +36,16 @@
       UI.renderHome({ showCheck: shouldCheck() });
     }
     if (name === 'later') LaterUI.renderList();
-    if (name === 'review') ReviewUI.render();
+    if (name === 'review') {
+      ReviewUI.render();
+      Badge.render();
+    }
     if (name === 'detail') LaterUI.renderDetail();
     if (name === 'hitori') HitoriUI.render();
     if (name === 'sticker') StickerUI.render();
     UI.showScreen(name);
     updateTabbar(name);
+    Badge.update(); // アイコンの数字を合わせる
     if (name === 'hitori') HitoriUI.scrollToEnd();
   }
 
@@ -448,12 +452,16 @@
     b.addEventListener('click', () => go(b.dataset.go))
   );
 
+  // アイコンの数字（ふりかえり画面）
+  on('btn-badge', 'click', Badge.enable);
+
   // 迷子救済
   on('btn-return', 'click', returnFromLost);
   document.addEventListener('keydown', globalKeydown);
 
   // アプリに戻ってきたとき：ホームなら「まだやってる？」を確認し直す
   document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') Badge.update(); // 閉じる瞬間に数字を合わせる
     if (document.visibilityState === 'visible' && current === 'home' && !editing) {
       UI.renderHome({ showCheck: shouldCheck() });
     }
