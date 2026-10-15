@@ -5,6 +5,7 @@
    ・日記　　　… 日付・妊娠週数・予定日まであと何日・体調・食べれたもの・ひとこと
    ・ひとりごと … その日のひとりごとを、時刻つきで全部（肉球のはんこも）
    ・あとで見る … その日に退避した思いつき（終わったものには ✓）
+                 「まだのぜんぶ」にすると、日に関係なく未完了のものだけを一覧に
 
    ・「保存」で、iPhoneなら共有シートが開きます。
      そこから「画像を保存」→ Fun Print の「画像印刷」で印刷。
@@ -63,7 +64,7 @@ const StickerUI = (() => {
     let saved = null;
     try { saved = JSON.parse(localStorage.getItem(KEY)); } catch (e) { saved = null; }
     state = Object.assign(
-      { due: DEFAULT_DUE, date: todayStr(), cond: 'ok', checkup: false, chips: DEFAULT_CHIPS.slice(), foods: [], memo: '', size: 'full', mode: 'diary' },
+      { due: DEFAULT_DUE, date: todayStr(), cond: 'ok', checkup: false, chips: DEFAULT_CHIPS.slice(), foods: [], memo: '', size: 'full', mode: 'diary', laterScope: 'day' },
       saved || {}
     );
     // 日付が変わっていたら、その日の記録だけ空にする（予定日と候補は残す）
@@ -71,6 +72,7 @@ const StickerUI = (() => {
       Object.assign(state, { date: todayStr(), cond: 'ok', checkup: false, foods: [], memo: '' });
     }
     if (!['diary', 'hitori', 'later'].includes(state.mode)) state.mode = 'diary';
+    if (!['day', 'open'].includes(state.laterScope)) state.laterScope = 'day';
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* 保存できなくても画面は使える */ }
@@ -303,6 +305,7 @@ const StickerUI = (() => {
       file: 'haru-later-',
       empty: 'この日は何も退避してない。',
       items: (day) => Storage.getBrainTabs().filter((t) => dayOf(t.createdAt) === day).sort((a, b) => a.createdAt - b.createdAt),
+      open: () => Storage.getBrainTabs().filter((t) => !t.completed).sort((a, b) => a.createdAt - b.createdAt), // 未完了ぜんぶ（古い順）
       days: () => Storage.getBrainTabs().map((t) => dayOf(t.createdAt)),
       haru: (items) => {
         const open = items.filter((t) => !t.completed).length;
@@ -312,10 +315,20 @@ const StickerUI = (() => {
     },
   };
 
+  // 「あとで見る」で「まだのぜんぶ」を選んでいるか
+  function isOpenAll() {
+    return state.mode === 'later' && state.laterScope === 'open';
+  }
+
   function renderList() {
     const kind = LIST[state.mode];
     const today = UI.startOfToday();
     if (listDay === null || listDay > today) listDay = today;
+    const openAll = isOpenAll();
+
+    $('pr-scope-field').hidden = state.mode !== 'later';
+    syncPressed('pr-scope', state.laterScope);
+    $('pr-day-field').hidden = openAll;
 
     $('pr-date').value = ymd(new Date(listDay));
     $('pr-date').max = todayStr();
@@ -337,8 +350,8 @@ const StickerUI = (() => {
       box.appendChild(b);
     });
 
-    const items = kind.items(listDay);
-    $('pr-note').textContent = items.length ? '' : kind.empty;
+    const items = openAll ? kind.open() : kind.items(listDay);
+    $('pr-note').textContent = items.length ? '' : openAll ? 'まだのものはない。ぜんぶ片づいてる。' : kind.empty;
     drawList(kind, items);
   }
 
@@ -348,8 +361,8 @@ const StickerUI = (() => {
   }
 
   // 見出し（日付・黒い札・件数）。高さを返す
-  function listHead(c, draw, label, count) {
-    const d = new Date(listDay);
+  function listHead(c, draw, label, count, day) {
+    const d = new Date(day);
     const y = P;
     const md = d.getMonth() + 1 + '/' + d.getDate();
     c.font = font(900, 40);
@@ -386,7 +399,7 @@ const StickerUI = (() => {
 
   function hitoriLayout(items) {
     return (c, draw) => {
-      let y = listHead(c, draw, 'ひとりごと', items.length + 'こ');
+      let y = listHead(c, draw, 'ひとりごと', items.length + 'こ', listDay);
       if (draw) T.dashed(c, y);
       y += 14;
       if (!items.length) {
@@ -412,10 +425,11 @@ const StickerUI = (() => {
     };
   }
 
-  function laterLayout(items) {
+  function laterLayout(items, openAll) {
     return (c, draw) => {
       const done = items.filter((t) => t.completed).length;
-      let y = listHead(c, draw, 'あとで見る', items.length + 'こ' + (done ? '（済' + done + '）' : ''));
+      const count = openAll ? 'まだ' + items.length + 'こ' : items.length + 'こ' + (done ? '（済' + done + '）' : '');
+      let y = listHead(c, draw, 'あとで見る', count, openAll ? UI.startOfToday() : listDay);
       if (draw) T.dashed(c, y);
       y += 14;
       if (!items.length) {
@@ -445,7 +459,12 @@ const StickerUI = (() => {
         }
         y += lines.length * 25;
         // カテゴリと画像のしるし
-        const meta = [t.category ? '#' + t.category : '', t.imageId ? '［画像あり］' : ''].filter(Boolean).join('  ');
+        const made = new Date(t.createdAt);
+        const meta = [
+          openAll ? made.getMonth() + 1 + '/' + made.getDate() + 'から' : '', // 「まだのぜんぶ」ではいつ退避したかも
+          t.category ? '#' + t.category : '',
+          t.imageId ? '［画像あり］' : '',
+        ].filter(Boolean).join('  ');
         if (meta) {
           c.font = font(700, 13);
           if (draw) { c.fillStyle = '#000'; c.fillText(meta, tx, y + 13); }
@@ -458,14 +477,15 @@ const StickerUI = (() => {
   }
 
   function drawList(kind, items) {
-    const layout = state.mode === 'hitori' ? hitoriLayout(items) : laterLayout(items);
+    const layout = state.mode === 'hitori' ? hitoriLayout(items) : laterLayout(items, isOpenAll());
     const text = items.map((x) => x.text + (x.category || '')).join('') + kind.label + kind.haru(items) +
-      'こ済なし画像あり#［］ハルあとでな片づいたからっぽしずかな日きいてたよくしゃべったぜんぶ聞';
+      'こ済まだからなし画像あり#［］ハルあとでな片づいたからっぽしずかな日きいてたよくしゃべったぜんぶ聞';
     listBlob = null;
     T.render($('pr-canvas'), $('pr-out'), layout, text).then((b) => { listBlob = b; });
   }
 
   function listFileName() {
+    if (isOpenAll()) return 'haru-later-open-' + todayStr().replace(/-/g, '') + '.png';
     return LIST[state.mode].file + ymd(new Date(listDay)).replace(/-/g, '') + '.png';
   }
 
@@ -523,6 +543,10 @@ const StickerUI = (() => {
     $('pr-days').addEventListener('click', (e) => {
       const b = e.target.closest('[data-day]'); if (!b) return;
       setListDay(Number(b.dataset.day));
+    });
+    $('pr-scope').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b || b.dataset.v === state.laterScope) return;
+      state.laterScope = b.dataset.v; save(); renderList();
     });
     $('btn-pr-save').addEventListener('click', () => T.save(listBlob, listFileName(), $('pr-msg')));
   }
