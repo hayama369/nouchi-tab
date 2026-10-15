@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
 
-  <link rel="stylesheet" href="style.css?v=20261014c">
+  <link rel="stylesheet" href="style.css?v=20261015a">
 </head>
 <body>
 <!--
@@ -294,6 +294,91 @@
     <canvas id="st-canvas" width="384" height="300" hidden></canvas>
   </section>
 
+  <!-- ===================== 7. 描く（絵を描いた時間をはかる・js/ui-draw.js） ===================== -->
+  <section id="screen-draw" class="screen" hidden>
+    <div class="page-head">
+      <h2 class="screen-title">描く</h2>
+    </div>
+
+    <!-- タイマー -->
+    <div class="card draw-timer">
+      <div class="draw-face">
+        <div id="draw-ring" class="draw-ring" aria-hidden="true"></div>
+        <div class="draw-face-in">
+          <p id="draw-clock" class="draw-clock" role="timer">00:00</p>
+          <p id="draw-clock-sub" class="draw-clock-sub"></p>
+        </div>
+      </div>
+      <div id="draw-targets" class="draw-targets" role="group" aria-label="目安の時間">
+        <button type="button" class="chip" data-min="10">10分</button>
+        <button type="button" class="chip" data-min="25">25分</button>
+        <button type="button" class="chip" data-min="30">30分</button>
+        <button type="button" class="chip" data-min="60">60分</button>
+      </div>
+      <button type="button" id="btn-draw-start" class="btn btn-primary btn-huge">はじめる</button>
+      <button type="button" id="btn-draw-stop" class="btn btn-primary btn-huge" hidden>おわり（記録する）</button>
+      <button type="button" id="btn-draw-cancel" class="btn btn-ghost btn-small" hidden>記録しないでやめる</button>
+    </div>
+
+    <!-- ハルのひとこと -->
+    <div class="draw-haru-row">
+      <div id="haru-draw" class="draw-haru" title="ハル"></div>
+      <p id="draw-comment" class="draw-comment" aria-live="polite"></p>
+    </div>
+
+    <!-- 今日と、続けた日数 -->
+    <div class="draw-stats">
+      <div class="card draw-stat"><span class="section-title">今日</span><strong id="draw-today">0分</strong></div>
+      <div class="card draw-stat"><span class="section-title">連続</span><strong id="draw-streak">0日</strong><span id="draw-best" class="note"></span></div>
+    </div>
+
+    <!-- 1000時間チャレンジ → 3000 → 5000 → 10000 -->
+    <div class="card">
+      <h3 id="draw-goal-name" class="section-title">1,000時間チャレンジ</h3>
+      <p class="draw-goal"><strong id="draw-goal-left"></strong><span class="note">いままで <span id="draw-total"></span></span></p>
+      <div id="draw-goal-meter" class="draw-meter" role="img"><span id="draw-goal-fill"></span></div>
+      <p id="draw-goal-steps" class="note draw-steps"></p>
+    </div>
+
+    <!-- 描いた日（色が濃いほど長く描いた日） -->
+    <div class="card">
+      <h3 class="section-title">描いた日</h3>
+      <div id="draw-cal-months" class="draw-cal-months" aria-hidden="true"></div>
+      <div id="draw-cal" class="draw-cal" role="img" aria-label="描いた日のカレンダー"></div>
+      <p class="note draw-cal-legend">少ない <i data-lv="1"></i><i data-lv="2"></i><i data-lv="3"></i><i data-lv="4"></i> 多い</p>
+    </div>
+
+    <!-- 記録 -->
+    <div class="card">
+      <h3 class="section-title">最近の記録</h3>
+      <p id="draw-log-empty" class="note">まだない。「はじめる」から1回目をどうぞ。</p>
+      <ol id="draw-log" class="draw-log"></ol>
+      <details class="draw-more">
+        <summary>はかり忘れた分を足す</summary>
+        <form id="draw-add-form" class="draw-inline" autocomplete="off">
+          <label class="visually-hidden" for="draw-add-date">日付</label>
+          <input id="draw-add-date" class="field" type="date">
+          <label class="visually-hidden" for="draw-add-min">分</label>
+          <input id="draw-add-min" class="field draw-num" type="number" inputmode="numeric" min="1" max="1440" placeholder="分">
+          <button type="submit" class="btn btn-solid btn-small">足す</button>
+        </form>
+      </details>
+      <details class="draw-more">
+        <summary>これまでの時間（前のアプリの分）　<span id="draw-base" class="note"></span></summary>
+        <form id="draw-base-form" class="draw-inline" autocomplete="off">
+          <label class="visually-hidden" for="draw-base-h">時間</label>
+          <input id="draw-base-h" class="field draw-num" type="number" inputmode="numeric" min="0" placeholder="時間">
+          <span>時間</span>
+          <label class="visually-hidden" for="draw-base-m">分</label>
+          <input id="draw-base-m" class="field draw-num" type="number" inputmode="numeric" min="0" max="59" placeholder="分">
+          <span>分</span>
+          <button type="submit" class="btn btn-solid btn-small">入れる</button>
+        </form>
+        <p class="note">ここに入れた時間は、チャレンジの合計にだけ足される（カレンダーには出ない）。</p>
+      </details>
+    </div>
+  </section>
+
   <!-- ===================== 4. ふりかえり ===================== -->
   <section id="screen-review" class="screen" hidden>
     <div class="page-head">
@@ -343,7 +428,7 @@
 
 </div>
 
-<!-- ===================== 下のメニュー（ホーム・ひとりごと・ふりかえり・シール） =====================
+<!-- ===================== 下のメニュー（ホーム・ひとりごと・描く・ふりかえり・シール） =====================
      見せる画面は js/app.js の TAB_SCREENS で決めています。 -->
 <nav id="tabbar" class="tabbar" aria-label="メニュー">
   <button type="button" class="tab" data-tab="home">
@@ -353,6 +438,10 @@
   <button type="button" class="tab" data-tab="hitori">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h10a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2z"/><path d="M6 18a2 2 0 0 1 2-2h10"/><path d="M10 8h5M10 11h3"/></svg>
     <span>ひとりごと</span>
+  </button>
+  <button type="button" class="tab" data-tab="draw">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"/><path d="M13.5 6.5l4 4"/></svg>
+    <span>描く</span>
   </button>
   <button type="button" class="tab" data-tab="review">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>
@@ -381,17 +470,18 @@
 <input id="image-input" type="file" accept="image/*" hidden>
 
 <!-- 読み込む順番が大事：保存 → 部品 → 表示 → 操作 -->
-<script src="js/storage.js?v=20261014c"></script>
-<script src="js/images.js?v=20261014c"></script>
-<script src="js/haru.js?v=20261014c"></script>
-<script src="js/voice.js?v=20261014c"></script>
-<script src="js/analysis.js?v=20261014c"></script>
-<script src="js/ui.js?v=20261014c"></script>
-<script src="js/ui-later.js?v=20261014c"></script>
-<script src="js/ui-review.js?v=20261014c"></script>
-<script src="js/ui-hitori.js?v=20261014c"></script>
-<script src="js/ui-sticker.js?v=20261014c"></script>
-<script src="js/badge.js?v=20261014c"></script>
-<script src="js/app.js?v=20261014c"></script>
+<script src="js/storage.js?v=20261015a"></script>
+<script src="js/images.js?v=20261015a"></script>
+<script src="js/haru.js?v=20261015a"></script>
+<script src="js/voice.js?v=20261015a"></script>
+<script src="js/analysis.js?v=20261015a"></script>
+<script src="js/ui.js?v=20261015a"></script>
+<script src="js/ui-later.js?v=20261015a"></script>
+<script src="js/ui-review.js?v=20261015a"></script>
+<script src="js/ui-hitori.js?v=20261015a"></script>
+<script src="js/ui-sticker.js?v=20261015a"></script>
+<script src="js/badge.js?v=20261015a"></script>
+<script src="js/ui-draw.js?v=20261015a"></script>
+<script src="js/app.js?v=20261015a"></script>
 </body>
 </html>

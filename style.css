@@ -1062,7 +1062,7 @@ textarea.st-input { resize: vertical; }
 .st-add .field { flex: 1; }
 .st-add .btn { flex: none; }
 
-/* ---------- 下のメニュー（ホーム・ひとりごと・ふりかえり・シール） ----------
+/* ---------- 下のメニュー（ホーム・ひとりごと・描く・ふりかえり・シール） ----------
    画面の一番下に固定。メニューがある画面では、下にその分の余白を足す。 */
 :root { --tabbar-h: calc(4rem + env(safe-area-inset-bottom, 0px)); }
 .tabbar {
@@ -1072,7 +1072,7 @@ textarea.st-input { resize: vertical; }
   bottom: 0;
   z-index: 9; /* 迷子救済（10）より下、お知らせ（20）より下 */
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   max-width: 34rem;
   margin: 0 auto;
   padding: 0.35rem 0.5rem env(safe-area-inset-bottom, 0px);
@@ -1102,3 +1102,67 @@ textarea.st-input { resize: vertical; }
 body.has-tabbar .app { padding-bottom: calc(var(--tabbar-h) + 20px); }
 body.has-tabbar .hitori-form { bottom: var(--tabbar-h); }
 body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
+
+/* ---------- 7. 描く（js/ui-draw.js） ---------- */
+.draw-timer { align-items: stretch; text-align: center; }
+.draw-face { position: relative; width: min(15rem, 70vw); aspect-ratio: 1; margin: 0.2rem auto 0.4rem; }
+.draw-ring {
+  --p: 0;
+  position: absolute; inset: 0; border-radius: 50%;
+  background: conic-gradient(var(--accent) calc(var(--p) * 1turn), var(--line) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+          mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 9px));
+}
+.draw-timer.is-over .draw-ring { background: var(--gold); }
+.draw-face-in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; padding: 0 1.6rem; }
+.draw-clock { font-family: var(--font-display); font-weight: 900; font-size: clamp(2.4rem, 12vw, 3.4rem); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.draw-timer.is-running .draw-clock { color: var(--accent); }
+.draw-timer.is-over .draw-clock { color: var(--gold); }
+.draw-clock-sub { color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
+.draw-targets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
+.draw-targets .chip { padding-inline: 0; }
+.draw-targets .chip:disabled { opacity: 0.45; cursor: default; }
+.draw-timer .chip.is-on:disabled { opacity: 1; }
+
+.draw-haru-row { display: flex; align-items: flex-end; gap: 0.6rem; margin: 0.2rem 0 0.4rem; }
+.draw-haru { width: 70px; flex-shrink: 0; }
+.draw-comment {
+  flex: 1; position: relative; margin-bottom: 1.2rem;
+  background: var(--surface); border-radius: 18px 18px 18px 4px; padding: 0.75rem 0.95rem;
+  line-height: 1.6; font-size: 0.98rem;
+}
+
+.draw-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.draw-stat { gap: 0.25rem; }
+.draw-stat strong { font-family: var(--font-display); font-weight: 900; font-size: 1.7rem; font-variant-numeric: tabular-nums; }
+
+.draw-goal { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.draw-goal strong { font-family: var(--font-display); font-weight: 900; font-size: 1.6rem; color: var(--accent); }
+.draw-meter { height: 12px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.draw-meter span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: inherit; transition: width 0.4s; }
+.draw-steps { font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+
+.draw-cal-months { display: grid; grid-template-columns: repeat(15, 1fr); gap: 3px; font-size: 0.7rem; color: var(--muted); }
+.draw-cal-months span { white-space: nowrap; overflow: visible; }
+.draw-cal { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
+.draw-cell { aspect-ratio: 1; border-radius: 3px; background: var(--line); }
+.draw-cell[data-lv="1"], .draw-cal-legend i[data-lv="1"] { background: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.draw-cell[data-lv="2"], .draw-cal-legend i[data-lv="2"] { background: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.draw-cell[data-lv="3"], .draw-cal-legend i[data-lv="3"] { background: color-mix(in srgb, var(--accent) 80%, var(--line)); }
+.draw-cell[data-lv="4"], .draw-cal-legend i[data-lv="4"] { background: var(--accent); }
+.draw-cell.is-future { background: transparent; }
+.draw-cell.is-today { outline: 2px solid var(--gold); outline-offset: 1px; }
+.draw-cal-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; font-size: 0.8rem; }
+.draw-cal-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+
+.draw-log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.draw-log-item { display: flex; align-items: center; gap: 0.8rem; padding: 0.55rem 0; border-bottom: 1px solid var(--line); }
+.draw-log-item:last-child { border-bottom: 0; }
+.draw-log-when { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.9rem; min-width: 6.5rem; }
+.draw-log-len { flex: 1; font-weight: 700; }
+.draw-log-del { appearance: none; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.85rem; padding: 0.3rem 0.4rem; cursor: pointer; }
+.draw-log-del[data-armed="1"] { color: var(--danger); font-weight: 700; }
+.draw-more summary { cursor: pointer; color: var(--muted); font-weight: 700; padding: 0.3rem 0; }
+.draw-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.draw-inline .field { width: auto; flex: 1 1 8rem; min-height: 2.75rem; }
+.draw-inline .draw-num { flex: 0 1 5.5rem; }

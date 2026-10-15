@@ -18,7 +18,7 @@
   const on = (id, event, fn) => $(id).addEventListener(event, fn);
 
   // 下のメニューを出す画面（ここにない画面ではメニューを隠す）
-  const TAB_SCREENS = ['home', 'hitori', 'review', 'sticker'];
+  const TAB_SCREENS = ['home', 'hitori', 'draw', 'review', 'sticker'];
 
   let current = 'home'; // いま表示中の画面
   let editing = false; // ホームで「変更」中か
@@ -43,6 +43,7 @@
     if (name === 'detail') LaterUI.renderDetail();
     if (name === 'hitori') HitoriUI.render();
     if (name === 'sticker') StickerUI.render();
+    if (name === 'draw') DrawUI.render();
     UI.showScreen(name);
     updateTabbar(name);
     Badge.update(); // アイコンの数字を合わせる
@@ -379,10 +380,11 @@
   // （iPhoneの「ショートカット」アプリのウィジェットから開く用）
   function handleHash() {
     const hash = location.hash;
-    if (hash !== '#capture' && hash !== '#hitori' && hash !== '#sticker') return;
+    if (!['#capture', '#hitori', '#sticker', '#draw'].includes(hash)) return;
     history.replaceState(null, '', location.pathname + location.search);
     if (hash === '#capture') openCapture();
     else if (hash === '#sticker') go('sticker');
+    else if (hash === '#draw') go('draw');
     else openHitori();
   }
 
@@ -481,6 +483,7 @@
   // =========================================================
   UI.init();
   StickerUI.init();
+  DrawUI.init();
   $('btn-voice').hidden = !Voice.isSupported(); // 使えないブラウザではボタンを出さない
   go('home');
   handleHash();
