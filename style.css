@@ -237,6 +237,16 @@ p, h1, h2, h3 { margin: 0; }
   padding: 0.95rem 1.1rem;
 }
 .field::placeholder { color: var(--muted); opacity: 0.8; }
+/* iPhone の日付欄は中身の幅で横にはみ出すので、枠に収める */
+input[type="date"].field {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 3rem;
+}
+input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin: 0; }
 .field:focus { outline: none; border-color: var(--accent); }
 .field-big {
   font-size: 1.5rem;
@@ -1032,7 +1042,7 @@ p, h1, h2, h3 { margin: 0; }
   background: var(--surface);
 }
 .st-field { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
-.st-two { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.st-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.75rem; }
 @media (max-width: 360px) { .st-two { grid-template-columns: 1fr; } }
 .st-input { font-size: 1.05rem; padding: 0.7rem 0.9rem; background: var(--bg); min-width: 0; }
 textarea.st-input { resize: vertical; }
