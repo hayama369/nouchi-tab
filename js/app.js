@@ -34,6 +34,7 @@
     if (name === 'home') {
       editing = false;
       UI.renderHome({ showCheck: shouldCheck() });
+      RoutineUI.render();
     }
     if (name === 'later') LaterUI.renderList();
     if (name === 'review') {
@@ -93,6 +94,7 @@
     const wasNew = !editing;
     editing = false;
     UI.renderHome();
+    RoutineUI.mark('pick'); // ルーティンの「今日やることを決める」に ✓
     if (wasNew) UI.haru.home.meow('にゃ'); // ハルが起きる
   }
 
@@ -354,6 +356,30 @@
   }
 
   // =========================================================
+  // 6. 今日のルーティン（ホームの下）の横ボタン
+  // =========================================================
+  function routineGo(where) {
+    if (where === 'print') {
+      // 昨日のひとりごとから（夜中の4時までは、その前の日を「昨日」にする）
+      const base = new Date(Date.now() - 4 * 3600000);
+      const start = new Date(base.getFullYear(), base.getMonth(), base.getDate()).getTime();
+      StickerUI.openMode('hitori', { day: start - 86400000 });
+      go('sticker');
+    } else if (where === 'diary') {
+      StickerUI.openMode('diary', RoutineUI.isEasy() ? { size: 'mini' } : null); // しんどい日は「ちいさめ」で
+      go('sticker');
+    } else if (where === 'now') {
+      if (Storage.getCurrentTask()) {
+        RoutineUI.mark('pick');
+        UI.toast('もう決まってる。');
+        return;
+      }
+      window.scrollTo(0, 0);
+      $('now-input').focus(); // 押したときだけ入力欄へ
+    }
+  }
+
+  // =========================================================
   // 迷子救済
   // =========================================================
   function returnFromLost() {
@@ -376,12 +402,16 @@
   // URLの最後が #capture なら、いきなり入力画面を開く
   // #hitori なら、いきなり「ひとりごと」を開く
   // #sticker なら、いきなり「シール」を開く
+  // #routine なら、ホームの「今日のルーティン」まで下ろす
   // （iPhoneの「ショートカット」アプリのウィジェットから開く用）
   function handleHash() {
     const hash = location.hash;
-    if (!['#capture', '#hitori', '#sticker', '#draw'].includes(hash)) return;
+    if (!['#capture', '#hitori', '#sticker', '#draw', '#routine'].includes(hash)) return;
     history.replaceState(null, '', location.pathname + location.search);
-    if (hash === '#capture') openCapture();
+    if (hash === '#routine') {
+      go('home');
+      $('routine').scrollIntoView({ block: 'start' });
+    } else if (hash === '#capture') openCapture();
     else if (hash === '#sticker') go('sticker');
     else if (hash === '#draw') go('draw');
     else openHitori();
@@ -465,12 +495,14 @@
     if (document.visibilityState === 'hidden') Badge.update(); // 閉じる瞬間に数字を合わせる
     if (document.visibilityState === 'visible' && current === 'home' && !editing) {
       UI.renderHome({ showCheck: shouldCheck() });
+      RoutineUI.render(); // 日が変わっていたら新しい日のぶんに
     }
   });
 
   // 別タブで更新されたとき
   window.addEventListener('storage', () => {
     if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
+    if (current === 'home') RoutineUI.render();
     if (current === 'later') LaterUI.renderList();
     if (current === 'hitori') HitoriUI.render();
   });
@@ -478,6 +510,7 @@
   // ほかの端末から同期で届いたとき：いまの画面を描き直す
   window.addEventListener('noutab:synced', () => {
     if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
+    if (current === 'home') RoutineUI.render();
     if (current === 'later') LaterUI.renderList();
     if (current === 'detail') LaterUI.renderDetail();
     if (current === 'hitori') HitoriUI.render();
@@ -494,6 +527,7 @@
   // =========================================================
   UI.init();
   StickerUI.init();
+  RoutineUI.init({ go: routineGo });
   DrawUI.init();
   Sync.init();
   $('btn-voice').hidden = !Voice.isSupported(); // 使えないブラウザではボタンを出さない

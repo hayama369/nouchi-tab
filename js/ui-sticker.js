@@ -120,6 +120,27 @@ const StickerUI = (() => {
     render();
   }
 
+  /** ほかの画面から「この種類で開いて」と頼まれたとき（このあと go('sticker') される）
+   *  opts.day … ひとりごと／あとで見るで表示する日（0時のミリ秒）
+   *  opts.scope … あとで見るの 'day' / 'open'
+   *  opts.size … 日記の 'full' / 'mini' */
+  function openMode(mode, opts) {
+    load();
+    state.mode = mode;
+    if (opts && opts.scope) state.laterScope = opts.scope;
+    if (opts && opts.day != null) listDay = opts.day;
+    if (opts && opts.size) state.size = opts.size;
+    save();
+  }
+
+  /** 体調だけ入れる（ホームのルーティンから） */
+  function setCond(v) {
+    load();
+    if (!COND[v]) return;
+    state.cond = v;
+    save();
+  }
+
   // =========================================================
   // 1. 日記シール
   // =========================================================
@@ -530,7 +551,10 @@ const StickerUI = (() => {
     $('st-memo').addEventListener('input', (e) => { state.memo = e.target.value; changed(); });
     $('st-checkup').addEventListener('change', (e) => { state.checkup = e.target.checked; changed(); });
     $('st-form').addEventListener('submit', (e) => e.preventDefault());
-    $('btn-st-save').addEventListener('click', () => T.save(lastBlob, diaryFileName(), $('st-msg')));
+    $('btn-st-save').addEventListener('click', () => {
+      RoutineUI.mark('diary'); // ルーティンの「日記シール」に ✓
+      T.save(lastBlob, diaryFileName(), $('st-msg'));
+    });
 
     // ひとりごと／あとで見る
     $('pr-form').addEventListener('submit', (e) => e.preventDefault());
@@ -551,5 +575,5 @@ const StickerUI = (() => {
     $('btn-pr-save').addEventListener('click', () => T.save(listBlob, listFileName(), $('pr-msg')));
   }
 
-  return { init, render, refresh };
+  return { init, render, refresh, openMode, setCond };
 })();

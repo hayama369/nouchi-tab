@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
 
-  <link rel="stylesheet" href="style.css?v=20261016b">
+  <link rel="stylesheet" href="style.css?v=20261016c">
 </head>
 <body>
 <!--
@@ -82,6 +82,20 @@
         あとで見る<span id="later-count" class="count"></span>
       </button>
     </div>
+
+    <!-- 今日のルーティン（js/ui-routine.js） -->
+    <section id="routine" class="card routine" aria-labelledby="routine-title">
+      <div class="routine-head">
+        <h2 id="routine-title" class="section-title">今日のルーティン</h2>
+        <button type="button" id="btn-routine-easy" class="btn btn-quiet btn-small routine-easy" aria-pressed="false">しんどい日にする</button>
+      </div>
+      <div id="routine-tabs" class="routine-tabs" role="tablist" aria-label="朝と夜">
+        <button type="button" role="tab" data-sec="morning">朝 <span class="routine-tab-count"></span></button>
+        <button type="button" role="tab" data-sec="night">夜 <span class="routine-tab-count"></span></button>
+      </div>
+      <ul id="routine-list" class="routine-list"></ul>
+      <p id="routine-msg" class="routine-msg" role="status"></p>
+    </section>
   </section>
 
   <!-- ===================== 2. 思いつき入力 ===================== -->
@@ -534,20 +548,21 @@
 <input id="image-input" type="file" accept="image/*" hidden>
 
 <!-- 読み込む順番が大事：保存 → 部品 → 表示 → 操作 -->
-<script src="js/storage.js?v=20261016b"></script>
-<script src="js/images.js?v=20261016b"></script>
-<script src="js/haru.js?v=20261016b"></script>
-<script src="js/voice.js?v=20261016b"></script>
-<script src="js/analysis.js?v=20261016b"></script>
-<script src="js/ui.js?v=20261016b"></script>
-<script src="js/ui-later.js?v=20261016b"></script>
-<script src="js/ui-review.js?v=20261016b"></script>
-<script src="js/ui-hitori.js?v=20261016b"></script>
-<script src="js/thermal.js?v=20261016b"></script>
-<script src="js/ui-sticker.js?v=20261016b"></script>
-<script src="js/badge.js?v=20261016b"></script>
-<script src="js/ui-draw.js?v=20261016b"></script>
-<script src="js/sync.js?v=20261016b"></script>
-<script src="js/app.js?v=20261016b"></script>
+<script src="js/storage.js?v=20261016c"></script>
+<script src="js/images.js?v=20261016c"></script>
+<script src="js/haru.js?v=20261016c"></script>
+<script src="js/voice.js?v=20261016c"></script>
+<script src="js/analysis.js?v=20261016c"></script>
+<script src="js/ui.js?v=20261016c"></script>
+<script src="js/ui-later.js?v=20261016c"></script>
+<script src="js/ui-review.js?v=20261016c"></script>
+<script src="js/ui-hitori.js?v=20261016c"></script>
+<script src="js/thermal.js?v=20261016c"></script>
+<script src="js/ui-sticker.js?v=20261016c"></script>
+<script src="js/badge.js?v=20261016c"></script>
+<script src="js/ui-draw.js?v=20261016c"></script>
+<script src="js/sync.js?v=20261016c"></script>
+<script src="js/ui-routine.js?v=20261016c"></script>
+<script src="js/app.js?v=20261016c"></script>
 </body>
 </html>

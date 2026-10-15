@@ -8,7 +8,7 @@
      ・同じ記録を両方で変えていたら、後から変えたほうを残します。
    同期するもの：
      いまの作業・あとで見る（思いつき）・終わった作業・ひとりごと・
-     描く（記録・タイマー・これまでの時間）・思いつきの画像
+     描く（記録・タイマー・これまでの時間）・今日のルーティン・思いつきの画像
      （シールの設定は端末ごと）
    いつ同期するか：
      ・何かを変えた2秒後　・画面を開いている間は30秒ごと
@@ -37,6 +37,7 @@ const Sync = (() => {
     mumbles: 'noutab.mumbles',
     current: 'noutab.currentTask',
     draw: 'noutab.draw',
+    routine: 'noutab.routine',
   };
   const ARRAYS = { tabs: DATA.tabs, history: DATA.history, mumbles: DATA.mumbles };
 
@@ -91,6 +92,8 @@ const Sync = (() => {
     const draw = read(DATA.draw, {}) || {};
     (Array.isArray(draw.sessions) ? draw.sessions : []).forEach((s) => s && s.id && map.set('draw/' + s.id, s));
     map.set('meta/drawState', { running: draw.running || null, target: draw.target || 30, baseMin: +draw.baseMin || 0 });
+    const routine = read(DATA.routine, {}) || {};
+    Object.entries(routine).forEach(([day, d]) => d && typeof d === 'object' && map.set('routine/' + day, d));
     return map;
   }
 
@@ -164,6 +167,16 @@ const Sync = (() => {
         draw.baseMin = +st.data.baseMin || 0;
       }
       write(DATA.draw, draw);
+    }
+
+    // 今日のルーティン（日ごと）
+    if (byCol.routine) {
+      const routine = read(DATA.routine, {}) || {};
+      byCol.routine.forEach((r) => {
+        if (r.deleted) delete routine[r.id];
+        else if (r.data) routine[r.id] = r.data;
+      });
+      write(DATA.routine, routine);
     }
 
     // いまの作業

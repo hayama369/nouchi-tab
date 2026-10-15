@@ -1195,3 +1195,78 @@ body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 .sync-form .field { flex: 1; min-width: 0; }
 .sync-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 #sync-code { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; word-break: break-all; }
+
+/* ---------- 7. 今日のルーティン（ホームの下） ---------- */
+.routine { margin-top: 0.4rem; }
+.routine-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
+.routine-easy { min-height: 2.4rem; padding: 0.3rem 0.85rem; font-size: 0.9rem; }
+.routine-easy[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+
+.routine-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.routine-tabs button {
+  appearance: none;
+  font: inherit;
+  font-weight: 700;
+  min-height: 2.6rem;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+}
+.routine-tabs button[aria-selected="true"] { border-color: var(--accent); color: var(--accent); }
+.routine-tab-count { font-size: 0.85rem; color: var(--muted); margin-left: 0.2rem; }
+.routine-tabs .is-complete .routine-tab-count { color: var(--accent); }
+
+.routine-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.routine-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--line);
+}
+.routine-item:first-child { border-top: 0; }
+.routine-check {
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--fg);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.routine-box {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 7px;
+  border: 2px solid var(--line);
+  display: grid;
+  place-items: center;
+}
+.routine-item.is-done .routine-box { background: var(--accent); border-color: var(--accent); }
+.routine-item.is-done .routine-box::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.8rem;
+  border: solid var(--on-accent);
+  border-width: 0 3px 3px 0;
+  transform: translateY(-1px) rotate(45deg);
+}
+.routine-item.is-done .routine-text { color: var(--muted); text-decoration: line-through; }
+.routine-go { flex: none; min-height: 2.3rem; padding: 0.25rem 0.8rem; font-size: 0.9rem; }
+.routine-conds { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0.4rem; padding-left: 2.25rem; }
+.routine-conds .chip { min-height: 2.3rem; }
+.routine-msg { margin: 0; min-height: 1.2em; color: var(--accent); font-size: 0.92rem; font-weight: 700; }
+.routine-msg:empty { display: none; }
