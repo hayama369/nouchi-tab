@@ -172,10 +172,9 @@
     go('home');
   }
 
-  // 「戻る」：いまの作業が未登録なら、入力欄にカーソルを置く
+  // 「戻る」：ホームへ（入力欄に勝手にカーソルは置かない。キーボードが出てじゃまなので）
   function backHome() {
     go('home');
-    if (!Storage.getCurrentTask()) $('now-input').focus();
   }
 
   // --- 声で入れる ---
@@ -484,6 +483,7 @@
     if (current === 'hitori') HitoriUI.render();
     if (current === 'review') ReviewUI.render();
     if (current === 'draw') DrawUI.render();
+    if (current === 'sticker') StickerUI.refresh();
     Badge.update();
   });
 

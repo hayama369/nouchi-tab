@@ -1072,6 +1072,17 @@ textarea.st-input { resize: vertical; }
 .st-add .field { flex: 1; }
 .st-add .btn { flex: none; }
 
+/* 作るものの切り替え（日記／ひとりごと／あとで見る） */
+.st-seg-3 { grid-template-columns: repeat(3, 1fr); }
+.st-pane { display: flex; flex-direction: column; gap: 1.4rem; }
+
+/* どの日（‹ 日付 ›） */
+.pr-day { display: flex; gap: 0.5rem; align-items: stretch; }
+.pr-day .field { flex: 1; }
+.pr-step { flex: none; min-width: 2.9rem; font-size: 1.3rem; font-weight: 900; }
+.pr-step:disabled { opacity: 0.4; cursor: default; }
+.pr-note { margin: 0; min-height: 1.2em; color: var(--muted); font-size: 0.9rem; font-weight: 700; }
+
 /* ---------- 下のメニュー（ホーム・ひとりごと・描く・ふりかえり・シール） ----------
    画面の一番下に固定。メニューがある画面では、下にその分の余白を足す。 */
 :root { --tabbar-h: calc(4rem + env(safe-area-inset-bottom, 0px)); }
