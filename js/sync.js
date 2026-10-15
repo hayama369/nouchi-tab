@@ -40,6 +40,11 @@ const Sync = (() => {
     routine: 'noutab.routine',
   };
   const ARRAYS = { tabs: DATA.tabs, history: DATA.history, mumbles: DATA.mumbles };
+  // この版が知っている記録の種類。知らない種類（新しい版で増えたもの）は、消したことにして送らない。
+  // ※ 古い版が「知らない記録＝消えた」と送ってしまい、新しい版のデータが消える事故を防ぐため
+  const KNOWN_COLS = ['tabs', 'history', 'mumbles', 'meta', 'draw', 'routine', 'images'];
+  // 消した知らせを受け取っても消さない種類（古い版からの「消えた」を無視する）
+  const KEEP_ON_DELETE = ['routine'];
 
   const ls = window.localStorage;
   let applying = false; // 受け取った記録を書き込み中（そのときは「変わった」と数えない）
@@ -114,6 +119,7 @@ const Sync = (() => {
       const key = r.col + '/' + r.id;
       const mine = shadow[key];
       if (mine && mine.u >= (r.updatedAt || 0)) continue; // こっちのほうが新しい（か同じ）
+      if (r.deleted && KEEP_ON_DELETE.includes(r.col)) continue; // 古い版からの「消えた」は無視
       if (r.col === 'images') {
         if (!r.deleted && r.data && r.data.d) {
           try {
@@ -260,6 +266,7 @@ const Sync = (() => {
       });
       Object.keys(shadow).forEach((key) => {
         if (key.startsWith('images/') || shadow[key].del || cur.has(key)) return;
+        if (!KNOWN_COLS.includes(key.split('/')[0])) return; // 知らない種類は消さない
         const u = Math.max(now, shadow[key].u + 1);
         const [col, ...rest] = key.split('/');
         out.push({ col, id: rest.join('/'), updatedAt: u, deleted: true });
