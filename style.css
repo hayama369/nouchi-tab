@@ -1166,3 +1166,11 @@ body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 .draw-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
 .draw-inline .field { width: auto; flex: 1 1 8rem; min-height: 2.75rem; }
 .draw-inline .draw-num { flex: 0 1 5.5rem; }
+
+/* ---------- ほかの端末と同期（js/sync.js） ---------- */
+#sync-off, #sync-on { display: flex; flex-direction: column; gap: 0.7rem; }
+#sync-off[hidden], #sync-on[hidden] { display: none; }
+.sync-form { display: flex; gap: 0.5rem; }
+.sync-form .field { flex: 1; min-width: 0; }
+.sync-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+#sync-code { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; word-break: break-all; }

@@ -476,6 +476,17 @@
     if (current === 'hitori') HitoriUI.render();
   });
 
+  // ほかの端末から同期で届いたとき：いまの画面を描き直す
+  window.addEventListener('noutab:synced', () => {
+    if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
+    if (current === 'later') LaterUI.renderList();
+    if (current === 'detail') LaterUI.renderDetail();
+    if (current === 'hitori') HitoriUI.render();
+    if (current === 'review') ReviewUI.render();
+    if (current === 'draw') DrawUI.render();
+    Badge.update();
+  });
+
   window.addEventListener('hashchange', handleHash);
 
   // =========================================================
@@ -484,6 +495,7 @@
   UI.init();
   StickerUI.init();
   DrawUI.init();
+  Sync.init();
   $('btn-voice').hidden = !Voice.isSupported(); // 使えないブラウザではボタンを出さない
   go('home');
   handleHash();

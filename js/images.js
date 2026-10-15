@@ -97,5 +97,19 @@ const Images = (() => {
     }
   }
 
-  return { save, getUrl, remove };
+  // ---- 同期（js/sync.js）用 ----
+  /** 画像そのもの（Blob）を返す（なければ null） */
+  async function getBlob(id) {
+    try {
+      return (await run('readonly', (st) => st.get(id))) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  /** ほかの端末から届いた画像をそのままの id でしまう */
+  async function putBlob(id, blob) {
+    await run('readwrite', (st) => st.put(blob, id));
+  }
+
+  return { save, getUrl, remove, getBlob, putBlob };
 })();

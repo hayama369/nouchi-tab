@@ -200,6 +200,9 @@ const DrawUI = (() => {
     renderCalendar(map);
     renderLog(d);
     $('draw-base').textContent = d.baseMin ? hm(d.baseMin) : 'まだ入れてない';
+    // ほかの端末で始めたタイマーが同期で届いたときも、時計を動かす
+    if (run && !tick) startTick();
+    if (!run && tick) stopTick();
   }
 
   function renderClock(d) {
