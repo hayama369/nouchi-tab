@@ -17,7 +17,7 @@
    ========================================================= */
 
 const Sync = (() => {
-  const ENDPOINT = 'https://uchinokoto.vercel.app/api/sync';
+  const ENDPOINT = 'https://uchinokoto-hayama.vercel.app/api/sync';
   const PREFIX = 'noutab:'; // うちのことと置き場所を分けるための目印
   const INTERVAL = 30000;
   const OVERLAP = 5000; // 取りこぼし防止に、少し前から受け取り直す（ミリ秒）
