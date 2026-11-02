@@ -374,6 +374,7 @@
       <button type="button" id="btn-draw-start" class="btn btn-primary btn-huge">はじめる</button>
       <button type="button" id="btn-draw-stop" class="btn btn-primary btn-huge" hidden>おわり（記録する）</button>
       <button type="button" id="btn-draw-cancel" class="btn btn-ghost btn-small" hidden>記録しないでやめる</button>
+      <button type="button" id="btn-draw-sound" class="btn btn-ghost btn-small draw-sound" aria-pressed="true">🔔 休憩の音：オン</button>
     </div>
 
     <!-- ハルのひとこと -->
@@ -396,12 +397,31 @@
       <p id="draw-goal-steps" class="note draw-steps"></p>
     </div>
 
-    <!-- 描いた日（色が濃いほど長く描いた日） -->
-    <div class="card">
+    <!-- 描いた日（月ごと。色が濃いほど長く描いた日。押すとその日の記録） -->
+    <div class="card draw-month">
       <h3 class="section-title">描いた日</h3>
-      <div id="draw-cal-months" class="draw-cal-months" aria-hidden="true"></div>
-      <div id="draw-cal" class="draw-cal" role="img" aria-label="描いた日のカレンダー"></div>
+      <div class="draw-month-nav">
+        <button type="button" id="btn-draw-prev" class="btn btn-quiet btn-small draw-month-btn" aria-label="前の月">‹</button>
+        <p id="draw-month-title" class="draw-month-title" aria-live="polite"></p>
+        <button type="button" id="btn-draw-next" class="btn btn-quiet btn-small draw-month-btn" aria-label="次の月">›</button>
+      </div>
+      <div class="draw-cal-week" aria-hidden="true"><span class="is-sun">日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span class="is-sat">土</span></div>
+      <div id="draw-cal" class="draw-cal" role="group" aria-label="描いた日のカレンダー"></div>
       <p class="note draw-cal-legend">少ない <i data-lv="1"></i><i data-lv="2"></i><i data-lv="3"></i><i data-lv="4"></i> 多い</p>
+    </div>
+
+    <!-- その月のまとめ -->
+    <div class="draw-month-stats">
+      <div class="card draw-mstat"><span class="note">描いた日</span><strong id="draw-m-days">0<small>日</small></strong></div>
+      <div class="card draw-mstat"><span class="note">この月の合計</span><strong id="draw-m-total">0分</strong></div>
+      <div class="card draw-mstat"><span class="note">いちばん続いた</span><strong id="draw-m-best">0<small>日</small></strong></div>
+    </div>
+
+    <!-- 押した日の記録 -->
+    <div id="draw-day" class="card draw-day" hidden>
+      <div class="draw-day-head"><strong id="draw-day-title"></strong><span id="draw-day-total" class="draw-day-total"></span></div>
+      <p id="draw-day-empty" class="note" hidden>この日は描いてない。</p>
+      <ol id="draw-day-list" class="draw-day-list"></ol>
     </div>
 
     <!-- 記録 -->

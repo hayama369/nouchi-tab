@@ -9,7 +9,10 @@
      アプリを開いていないときに知らせるのは、Webアプリの仕組み上できません。
    ・1000時間 → 3000 → 5000 → 10000時間と、次の目標までの残りを出します。
      前のアプリで数えていた時間は「これまでの時間」に手で入れられます。
-   ・描いた日はカレンダーに色がつきます。続けた日数でハルがほめます。
+   ・描いた日は月ごとのカレンダーに色がつきます（‹ › で月をめくる。日を押すとその日の記録）。
+     続けた日数でハルがほめます。
+   ・目安の時間を過ぎたとき、アプリを開いていれば音を鳴らします（オン／オフあり。
+     オン／オフは端末ごとに noutab.drawSound に保存）。
    ・保存は localStorage の noutab.draw（この画面だけで使う）。
    ・ボタンのひも付けもこのファイルの init() の中にあります。
    ========================================================= */
@@ -18,7 +21,7 @@ const DrawUI = (() => {
   const KEY = 'noutab.draw';
   const TARGETS = [10, 25, 30, 60]; // 目安の時間（分）
   const GOALS = [1000, 3000, 5000, 10000]; // 目標（時間）
-  const WEEKS = 15; // カレンダーに出す週の数
+  const SOUND_KEY = 'noutab.drawSound'; // 休憩の音のオン／オフ（端末ごと・同期しない）
   const MIN_SAVE_SEC = 60; // これより短いと記録しない
 
   const $ = (id) => document.getElementById(id);
@@ -27,6 +30,8 @@ const DrawUI = (() => {
   let haru = null;
   let tick = null;
   let notifiedFor = null; // 休憩の知らせを出した回（始めた時刻）
+  let calMonth = null; // カレンダーで見ている月（その月1日の時刻）。null なら今月
+  let selDay = null; // カレンダーで押した日（'2026-10-23'）
 
   // ---------------------------------------------------------
   // 保存
@@ -197,7 +202,7 @@ const DrawUI = (() => {
     delete $('draw-comment').dataset.fresh;
 
     renderGoal(d);
-    renderCalendar(map);
+    renderCalendar(map, d);
     renderLog(d);
     $('draw-base').textContent = d.baseMin ? hm(d.baseMin) : 'まだ入れてない';
     // ほかの端末で始めたタイマーが同期で届いたときも、時計を動かす
@@ -237,40 +242,136 @@ const DrawUI = (() => {
     $('draw-goal-steps').textContent = GOALS.map((x) => (hours >= x ? '✓' : '') + x.toLocaleString('ja-JP')).join(' → ');
   }
 
-  function renderCalendar(map) {
+  /** 月の1日（0時）の時刻 */
+  const monthStart = (ms) => {
+    const d = new Date(ms);
+    return new Date(d.getFullYear(), d.getMonth(), 1).getTime();
+  };
+  const addMonth = (ms, n) => {
+    const d = new Date(ms);
+    return new Date(d.getFullYear(), d.getMonth() + n, 1).getTime();
+  };
+  /** マスに入れる短い時間（「42分」「1h30」） */
+  function short(min) {
+    min = Math.round(min);
+    if (min < 60) return min + '分';
+    const m = min % 60;
+    return Math.floor(min / 60) + 'h' + (m ? String(m).padStart(2, '0') : '');
+  }
+  const WEEK = ['日', '月', '火', '水', '木', '金', '土'];
+
+  function renderCalendar(map, d) {
+    const today = startOfDay(Date.now());
+    const thisMonth = monthStart(today);
+    if (calMonth === null || calMonth > thisMonth) calMonth = thisMonth;
+    // 一番古い記録の月より前には戻らない
+    const firstMs = d.sessions.length ? Math.min(...d.sessions.map((s) => s.start)) : today;
+    const oldest = Math.min(monthStart(firstMs), thisMonth);
+    if (calMonth < oldest) calMonth = oldest;
+
+    const m0 = new Date(calMonth);
+    const y = m0.getFullYear();
+    const mo = m0.getMonth();
+    const days = new Date(y, mo + 1, 0).getDate();
+    $('draw-month-title').textContent = y + '年 ' + (mo + 1) + '月';
+    $('btn-draw-prev').disabled = calMonth <= oldest;
+    $('btn-draw-next').disabled = calMonth >= thisMonth;
+
     const box = $('draw-cal');
     box.textContent = '';
-    const today = startOfDay(Date.now());
-    const todayDow = new Date(today).getDay(); // 0=日
-    const start = today - (todayDow + (WEEKS - 1) * 7) * DAY; // 一番左の列の日曜
     const max = Math.max(30, ...map.values());
-    for (let i = 0; i < WEEKS * 7; i++) {
-      const t = start + i * DAY;
-      const cell = document.createElement('span');
+    for (let i = 0; i < m0.getDay(); i++) {
+      const blank = document.createElement('span');
+      blank.className = 'draw-cell is-blank';
+      box.appendChild(blank);
+    }
+    let sum = 0;
+    let count = 0;
+    let best = 0;
+    let run = 0;
+    for (let day = 1; day <= days; day++) {
+      const t = new Date(y, mo, day).getTime();
+      const k = dayKey(t);
+      const v = map.get(k) || 0;
+      const cell = document.createElement('button');
+      cell.type = 'button';
       cell.className = 'draw-cell';
+      cell.dataset.day = k;
+      const num = document.createElement('b');
+      num.textContent = day;
+      cell.appendChild(num);
       if (t > today) {
         cell.classList.add('is-future');
+        cell.disabled = true;
       } else {
-        const v = map.get(dayKey(t)) || 0;
         const lv = v <= 0 ? 0 : v < max * 0.25 ? 1 : v < max * 0.5 ? 2 : v < max * 0.75 ? 3 : 4;
         cell.dataset.lv = lv;
-        const dt = new Date(t);
-        cell.title = dt.getMonth() + 1 + '/' + dt.getDate() + ' ' + (v ? hm(v) : 'なし');
-        if (t === today) cell.classList.add('is-today');
+        if (v > 0) {
+          const sm = document.createElement('small');
+          sm.textContent = short(v);
+          cell.appendChild(sm);
+        }
       }
+      cell.setAttribute('aria-label', mo + 1 + '月' + day + '日 ' + (v ? hm(v) : 'なし'));
+      if (t === today) cell.classList.add('is-today');
+      if (k === selDay) cell.classList.add('is-selected');
       box.appendChild(cell);
+      // その月のまとめ
+      if (v > 0) {
+        sum += v;
+        count++;
+        run++;
+        best = Math.max(best, run);
+      } else {
+        run = 0;
+      }
     }
-    // 月の目印
-    const months = $('draw-cal-months');
-    months.textContent = '';
-    let last = -1;
-    for (let w = 0; w < WEEKS; w++) {
-      const m = new Date(start + w * 7 * DAY).getMonth();
-      const s = document.createElement('span');
-      s.textContent = m !== last ? m + 1 + '月' : '';
-      last = m;
-      months.appendChild(s);
+    $('draw-m-days').innerHTML = count + '<small>日</small>';
+    $('draw-m-total').textContent = hm(sum);
+    $('draw-m-best').innerHTML = best + '<small>日</small>';
+    renderDay(d, map);
+  }
+
+  /** カレンダーで押した日の記録 */
+  function renderDay(d, map) {
+    const box = $('draw-day');
+    if (!selDay || selDay.slice(0, 7) !== dayKey(calMonth).slice(0, 7)) {
+      box.hidden = true;
+      return;
     }
+    box.hidden = false;
+    const t = new Date(selDay + 'T00:00:00');
+    $('draw-day-title').textContent = t.getMonth() + 1 + '月' + t.getDate() + '日（' + WEEK[t.getDay()] + '）';
+    const v = map.get(selDay) || 0;
+    $('draw-day-total').textContent = v ? '合計 ' + hm(v) : '';
+    const list = d.sessions.filter((s) => dayKey(s.start) === selDay).sort((a, b) => a.start - b.start);
+    $('draw-day-empty').hidden = list.length > 0;
+    const ol = $('draw-day-list');
+    ol.textContent = '';
+    list.forEach((s) => {
+      const li = document.createElement('li');
+      const dt = new Date(s.start);
+      const when = document.createElement('span');
+      when.className = 'when';
+      when.textContent = s.manual ? '手入力' : String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0');
+      const len = document.createElement('span');
+      len.className = 'len';
+      len.textContent = hm(s.sec / 60);
+      li.append(when, len);
+      ol.appendChild(li);
+    });
+  }
+
+  function calClick(e) {
+    const b = e.target.closest('[data-day]');
+    if (!b || b.disabled) return;
+    selDay = selDay === b.dataset.day ? null : b.dataset.day;
+    render();
+  }
+  function moveMonth(n) {
+    calMonth = addMonth(calMonth === null ? Date.now() : calMonth, n);
+    selDay = null;
+    render();
   }
 
   function renderLog(d) {
@@ -319,6 +420,7 @@ const DrawUI = (() => {
     save(d);
     notifiedFor = null;
     askNotify();
+    unlockAudio(); // ボタンを押したこの瞬間に音の準備をしておく（iPhoneはこうしないと鳴らない）
     $('draw-comment').dataset.fresh = '1';
     say(pick(['描くか。見てる。', 'よし、始めろ。', 'ペン持ったな。行け。']), 'にゃっ');
     render();
@@ -452,6 +554,7 @@ const DrawUI = (() => {
         $('draw-comment').dataset.fresh = '1';
         say(msg, 'にゃっ！');
       }
+      chime();
       notify(msg);
     }
   }
@@ -475,6 +578,94 @@ const DrawUI = (() => {
   }
 
   // ---------------------------------------------------------
+  // 休憩の音（アプリを開いているときだけ鳴る）
+  //   ・iPhone では、画面を押したあとでないと音を出せないので、
+  //     「はじめる」を押したときに準備（unlockAudio）しておく。
+  //   ・マナーモードでも鳴るように、鳴らすあいだだけ音の扱いを「再生」にする。
+  // ---------------------------------------------------------
+  let audio = null;
+  const soundOn = () => {
+    try {
+      return localStorage.getItem(SOUND_KEY) !== 'off';
+    } catch (e) {
+      return true;
+    }
+  };
+  function renderSound() {
+    const on = soundOn();
+    const b = $('btn-draw-sound');
+    b.textContent = on ? '🔔 休憩の音：オン' : '🔕 休憩の音：オフ';
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  function toggleSound() {
+    try {
+      localStorage.setItem(SOUND_KEY, soundOn() ? 'off' : 'on');
+    } catch (e) {
+      /* 保存できなくても何もしない */
+    }
+    renderSound();
+    if (soundOn()) {
+      unlockAudio();
+      chime(); // 試しに一回
+    }
+  }
+  function unlockAudio() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audio) audio = new AC();
+      if (audio.state === 'suspended') audio.resume();
+      // 無音を一瞬鳴らして、鳴らせる状態にしておく
+      const b = audio.createBuffer(1, 1, 22050);
+      const src = audio.createBufferSource();
+      src.buffer = b;
+      src.connect(audio.destination);
+      src.start(0);
+    } catch (e) {
+      /* 音が出せない端末では何もしない */
+    }
+  }
+  /** ぽろん、ぽろん（2回） */
+  function chime() {
+    if (!soundOn()) return;
+    try {
+      if (!audio) unlockAudio();
+      if (!audio) return;
+      if (audio.state === 'suspended') audio.resume();
+      try {
+        if (navigator.audioSession) navigator.audioSession.type = 'playback';
+      } catch (e) {
+        /* 使えない端末もある */
+      }
+      const t0 = audio.currentTime + 0.05;
+      const notes = [880, 1318.5, 880, 1318.5];
+      notes.forEach((f, i) => {
+        const at = t0 + i * 0.22 + (i >= 2 ? 0.35 : 0);
+        const o = audio.createOscillator();
+        const g = audio.createGain();
+        o.type = 'sine';
+        o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(0.35, at + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.6);
+        o.connect(g);
+        g.connect(audio.destination);
+        o.start(at);
+        o.stop(at + 0.65);
+      });
+      setTimeout(() => {
+        try {
+          if (navigator.audioSession) navigator.audioSession.type = 'auto';
+        } catch (e) {
+          /* 何もしない */
+        }
+      }, 2000);
+    } catch (e) {
+      /* 何もしない */
+    }
+  }
+
+  // ---------------------------------------------------------
   // はじめに1回
   // ---------------------------------------------------------
   function init() {
@@ -484,6 +675,13 @@ const DrawUI = (() => {
     $('btn-draw-stop').addEventListener('click', stop);
     $('btn-draw-cancel').addEventListener('click', cancel);
     $('draw-log').addEventListener('click', logClick);
+    $('draw-cal').addEventListener('click', calClick);
+    $('btn-draw-prev').addEventListener('click', () => moveMonth(-1));
+    $('btn-draw-next').addEventListener('click', () => moveMonth(1));
+    $('btn-draw-sound').addEventListener('click', toggleSound);
+    renderSound();
+    // アプリを開き直したあとも鳴らせるように、最初に画面を触ったときに音の準備をする
+    document.addEventListener('pointerdown', unlockAudio, { once: true });
     $('draw-base-form').addEventListener('submit', saveBase);
     $('draw-add-form').addEventListener('submit', addManual);
     $('draw-add-date').value = dayKey(Date.now());

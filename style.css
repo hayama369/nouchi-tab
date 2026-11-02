@@ -1163,16 +1163,46 @@ body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 .draw-meter span { display: block; height: 100%; width: 0; background: var(--accent); border-radius: inherit; transition: width 0.4s; }
 .draw-steps { font-variant-numeric: tabular-nums; font-size: 0.85rem; }
 
-.draw-cal-months { display: grid; grid-template-columns: repeat(15, 1fr); gap: 3px; font-size: 0.7rem; color: var(--muted); }
-.draw-cal-months span { white-space: nowrap; overflow: visible; }
-.draw-cal { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 3px; }
-.draw-cell { aspect-ratio: 1; border-radius: 3px; background: var(--line); }
+/* 描いた日：月ごとのカレンダー */
+.draw-month-nav { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.draw-month-btn { min-width: 2.75rem; font-size: 1.1rem; }
+.draw-month-btn:disabled { opacity: 0.35; }
+.draw-month-title { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.draw-cal-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+.draw-cal-week .is-sun { color: var(--danger); }
+.draw-cal-week .is-sat { color: var(--accent); }
+.draw-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.draw-cell {
+  appearance: none; border: 0; padding: 0; font: inherit; color: var(--fg); cursor: pointer;
+  aspect-ratio: 0.92; border-radius: 10px; background: color-mix(in srgb, var(--line) 55%, transparent);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0;
+}
+.draw-cell b { font-family: var(--font-display); font-weight: 500; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.draw-cell small { font-size: 0.6rem; opacity: 0.9; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.draw-cell[data-lv="0"] b { opacity: 0.6; }
+.draw-cell[data-lv="3"], .draw-cell[data-lv="4"] { color: var(--on-accent); }
+.draw-cell.is-blank { visibility: hidden; }
+.draw-cell.is-future { background: transparent; cursor: default; }
+.draw-cell.is-future b { opacity: 0.3; }
+.draw-cell.is-today { outline: 2px solid var(--gold); outline-offset: -2px; }
+.draw-cell.is-selected { outline: 2px solid var(--fg); outline-offset: -2px; }
+.draw-cell.is-today.is-selected { outline-color: var(--gold); box-shadow: inset 0 0 0 4px var(--fg); }
 .draw-cell[data-lv="1"], .draw-cal-legend i[data-lv="1"] { background: color-mix(in srgb, var(--accent) 35%, var(--line)); }
 .draw-cell[data-lv="2"], .draw-cal-legend i[data-lv="2"] { background: color-mix(in srgb, var(--accent) 60%, var(--line)); }
 .draw-cell[data-lv="3"], .draw-cal-legend i[data-lv="3"] { background: color-mix(in srgb, var(--accent) 80%, var(--line)); }
 .draw-cell[data-lv="4"], .draw-cal-legend i[data-lv="4"] { background: var(--accent); }
-.draw-cell.is-future { background: transparent; }
-.draw-cell.is-today { outline: 2px solid var(--gold); outline-offset: 1px; }
+.draw-month-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.draw-mstat { gap: 0.15rem; padding: 0.7rem 0.75rem; }
+.draw-mstat strong { font-family: var(--font-display); font-weight: 900; font-size: 1.25rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.draw-mstat small { font-size: 0.75rem; color: var(--muted); margin-left: 0.1rem; }
+.draw-day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.6rem; }
+.draw-day-head strong { font-family: var(--font-display); font-size: 1.05rem; }
+.draw-day-total { color: var(--accent); font-weight: 700; font-size: 0.9rem; }
+.draw-day-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
+.draw-day-list li { display: flex; gap: 0.9rem; font-variant-numeric: tabular-nums; }
+.draw-day-list .when { color: var(--muted); min-width: 3.2rem; }
+.draw-day-list .len { font-weight: 700; }
+.draw-sound { align-self: center; }
 .draw-cal-legend { display: flex; align-items: center; gap: 4px; justify-content: flex-end; font-size: 0.8rem; }
 .draw-cal-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
 
