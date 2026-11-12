@@ -581,7 +581,16 @@ const DrawUI = (() => {
   // 休憩の音（アプリを開いているときだけ鳴る）
   //   ・iPhone では、画面を押したあとでないと音を出せないので、
   //     「はじめる」を押したときに準備（unlockAudio）しておく。
-  //   ・マナーモードでも鳴るように、鳴らすあいだだけ音の扱いを「再生」にする。
+  //   ・【Apple Music が止まる対策】2026-11-12
+  //     iPhone は、このアプリが音の準備をしただけで「音楽アプリを止めて
+  //     自分が鳴らす」扱いになることがある。なので：
+  //       1. 音がオフの日は、音の準備を一切しない
+  //       2. 準備するのは「描いてる最中」だけ（画面を開いただけではしない）
+  //       3. ふだんは「ambient（ほかの音楽とまざる）」にしておく
+  //       4. 鳴らす瞬間だけ「transient（音楽を少し小さくして、終わったら戻す）」
+  //       5. 鳴らし終わったら音の部品を眠らせる（suspend）
+  //     ※ ambient なので、マナーモード中は休憩の音が鳴らないことがある。
+  //       そのときは画面の「休憩しろ」とハルのほうで気づける。
   // ---------------------------------------------------------
   let audio = null;
   const soundOn = () => {
@@ -591,6 +600,14 @@ const DrawUI = (() => {
       return true;
     }
   };
+  /** 音の扱いを切り替える（対応していない端末では何もしない） */
+  function setSession(type) {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = type;
+    } catch (e) {
+      /* 使えない端末もある */
+    }
+  }
   function renderSound() {
     const on = soundOn();
     const b = $('btn-draw-sound');
@@ -607,12 +624,22 @@ const DrawUI = (() => {
     if (soundOn()) {
       unlockAudio();
       chime(); // 試しに一回
+    } else if (audio) {
+      // オフにしたら、音の部品ごと片付ける
+      try {
+        audio.close();
+      } catch (e) {
+        /* 何もしない */
+      }
+      audio = null;
     }
   }
   function unlockAudio() {
+    if (!soundOn()) return; // オフの日は準備しない（音楽を止めないため）
     try {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return;
+      setSession('ambient'); // 先に「ほかの音楽とまざる」にしてから作る
       if (!audio) audio = new AC();
       if (audio.state === 'suspended') audio.resume();
       // 無音を一瞬鳴らして、鳴らせる状態にしておく
@@ -621,8 +648,17 @@ const DrawUI = (() => {
       src.buffer = b;
       src.connect(audio.destination);
       src.start(0);
+      // 準備が終わったらすぐ眠らせる（起きっぱなしだと音楽の邪魔になる）
+      setTimeout(sleepAudio, 300);
     } catch (e) {
       /* 音が出せない端末では何もしない */
+    }
+  }
+  function sleepAudio() {
+    try {
+      if (audio && audio.state === 'running') audio.suspend();
+    } catch (e) {
+      /* 何もしない */
     }
   }
   /** ぽろん、ぽろん（2回） */
@@ -631,12 +667,8 @@ const DrawUI = (() => {
     try {
       if (!audio) unlockAudio();
       if (!audio) return;
+      setSession('transient'); // 鳴らすあいだだけ、音楽を少し小さくしてもらう
       if (audio.state === 'suspended') audio.resume();
-      try {
-        if (navigator.audioSession) navigator.audioSession.type = 'playback';
-      } catch (e) {
-        /* 使えない端末もある */
-      }
       const t0 = audio.currentTime + 0.05;
       const notes = [880, 1318.5, 880, 1318.5];
       notes.forEach((f, i) => {
@@ -654,12 +686,9 @@ const DrawUI = (() => {
         o.stop(at + 0.65);
       });
       setTimeout(() => {
-        try {
-          if (navigator.audioSession) navigator.audioSession.type = 'auto';
-        } catch (e) {
-          /* 何もしない */
-        }
-      }, 2000);
+        sleepAudio();
+        setSession('ambient'); // 音楽を元の大きさに戻す
+      }, 1800);
     } catch (e) {
       /* 何もしない */
     }
@@ -680,8 +709,13 @@ const DrawUI = (() => {
     $('btn-draw-next').addEventListener('click', () => moveMonth(1));
     $('btn-draw-sound').addEventListener('click', toggleSound);
     renderSound();
-    // アプリを開き直したあとも鳴らせるように、最初に画面を触ったときに音の準備をする
-    document.addEventListener('pointerdown', unlockAudio, { once: true });
+    // アプリを開き直したあとも鳴らせるように、最初に画面を触ったときに音の準備をする。
+    // ただし「描いてる最中」で「音がオン」のときだけ（それ以外は音楽を止めないよう何もしない）
+    document.addEventListener('pointerdown', function firstTouch() {
+      if (!load().running || !soundOn()) return; // 条件が合うまで待ち続ける
+      document.removeEventListener('pointerdown', firstTouch);
+      unlockAudio();
+    });
     $('draw-base-form').addEventListener('submit', saveBase);
     $('draw-add-form').addEventListener('submit', addManual);
     $('draw-add-date').value = dayKey(Date.now());
