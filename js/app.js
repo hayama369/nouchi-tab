@@ -16,7 +16,7 @@
 
   // ホームの「ワンタップでカテゴリを付けて退避」ボタン（左から順に並ぶ）
   // 名前を変える・増やす・減らすときは、ここだけ直せばOK
-  const QUICK_CATS = ['かうもの', 'かんがえること', '保留'];
+  const QUICK_CATS = ['やること', 'かうもの', 'かんがえること', '保留'];
 
   const $ = (id) => document.getElementById(id);
   const on = (id, event, fn) => $(id).addEventListener(event, fn);

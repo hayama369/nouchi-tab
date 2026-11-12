@@ -285,7 +285,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
 /* ワンタップのカテゴリボタン */
 .quick-cats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr); /* 2列×2段（4つのとき）。3つにするなら repeat(3, 1fr) */
   gap: 0.6rem;
 }
 .quick-cat {
