@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
 
-  <link rel="stylesheet" href="style.css?v=20261016d">
+  <link rel="stylesheet" href="style.css?v=20261112a">
 </head>
 <body>
 <!--
@@ -35,82 +35,32 @@
 -->
 <div class="app">
 
-  <!-- ===================== 1. ホーム画面 ===================== -->
+  <!-- ===================== 1. ホーム画面 =====================
+       いちばん上で、そのまま思いついたことを打てる。
+       カテゴリのボタンを押すと、そのカテゴリを付けて一発で退避。
+       カテゴリの名前は js/app.js の QUICK_CATS で変えられます。 -->
   <section id="screen-home" class="screen">
 
-    <h1 class="question">いま何してる？</h1>
-
-    <!-- 「まだやってる？」の軽い確認（しばらく経ったときだけ出る） -->
-    <div id="check" class="check" hidden>
-      <p id="check-text"></p>
-      <div class="row">
-        <button type="button" id="btn-check-yes" class="btn btn-quiet btn-small">やってる</button>
-        <button type="button" id="btn-check-done" class="btn btn-quiet btn-small">終わった</button>
-      </div>
-    </div>
-
-    <!-- いまの作業：未登録 or 変更中のときに出る入力欄 -->
-    <form id="now-form" class="now-form" autocomplete="off">
-      <label for="now-input" class="visually-hidden">いまやっていること</label>
-      <input id="now-input" class="field" type="text" enterkeyhint="done"
-             placeholder="例：春千夜のイラストを描く">
-      <div class="row">
-        <button type="submit" class="btn btn-solid">これをやる</button>
-        <button type="button" id="btn-now-cancel" class="btn btn-ghost" hidden>やめる</button>
-      </div>
-    </form>
-
-    <!-- いまの作業：登録済みのときに出る表示 -->
-    <div id="now-view" class="now-view" hidden>
-      <p class="label">いま：</p>
-      <p id="now-text" class="now-text"></p>
-      <div class="row">
-        <button type="button" id="btn-change" class="btn btn-quiet">変更</button>
-        <button type="button" id="btn-finish" class="btn btn-quiet">終わった</button>
-      </div>
-    </div>
-
-    <!-- いちばん大事なボタン（上にハルが座っている） -->
-    <div class="capture-wrap">
-      <div id="haru-home" title="ハル"></div>
-      <button type="button" id="btn-capture" class="btn btn-primary btn-huge">＋ 思いついた</button>
-    </div>
-
-    <div class="home-foot">
-      <button type="button" id="btn-lost" class="btn btn-quiet">わたし、何してた？</button>
-      <button type="button" id="btn-later" class="btn btn-quiet">
-        あとで見る<span id="later-count" class="count"></span>
-      </button>
-    </div>
-
-    <!-- 今日のルーティン（js/ui-routine.js） -->
-    <section id="routine" class="card routine" aria-labelledby="routine-title">
-      <div class="routine-head">
-        <h2 id="routine-title" class="section-title">今日のルーティン</h2>
-        <button type="button" id="btn-routine-easy" class="btn btn-quiet btn-small routine-easy" aria-pressed="false">しんどい日にする</button>
-      </div>
-      <div id="routine-tabs" class="routine-tabs" role="tablist" aria-label="朝と夜">
-        <button type="button" role="tab" data-sec="morning">朝 <span class="routine-tab-count"></span></button>
-        <button type="button" role="tab" data-sec="night">夜 <span class="routine-tab-count"></span></button>
-      </div>
-      <ul id="routine-list" class="routine-list"></ul>
-      <p id="routine-msg" class="routine-msg" role="status"></p>
-    </section>
-  </section>
-
-  <!-- ===================== 2. 思いつき入力 ===================== -->
-  <section id="screen-capture" class="screen" hidden>
-    <p class="screen-title is-small">思いついた</p>
     <form id="capture-form" class="capture-form" autocomplete="off">
-      <label for="capture-input" class="visually-hidden">思いついたこと</label>
-      <textarea id="capture-input" class="field field-big" rows="3" enterkeyhint="done"
-                placeholder="なんでも。整理はあとで。"></textarea>
+      <h1 class="question">思いついた？</h1>
+
+      <div class="capture-box">
+        <div id="haru-home" title="ハル"></div>
+        <label for="capture-input" class="visually-hidden">思いついたこと</label>
+        <textarea id="capture-input" class="field field-big" rows="3" enterkeyhint="done"
+                  placeholder="なんでも。整理はあとで。"></textarea>
+      </div>
 
       <!-- 添付した画像のプレビュー -->
       <div id="capture-attach" class="attach" hidden>
         <img id="capture-attach-img" alt="添付した画像">
         <button type="button" id="btn-attach-remove" class="attach-remove" aria-label="画像を外す">×</button>
       </div>
+
+      <!-- ワンタップでカテゴリを付けて退避（中身は js/app.js が作る） -->
+      <div id="quick-cats" class="quick-cats" role="group" aria-label="カテゴリを付けて退避"></div>
+
+      <button type="submit" class="btn btn-primary btn-huge">退避</button>
 
       <!-- 声・画像（使わなくてもいい、おまけのボタン） -->
       <div class="tools">
@@ -123,27 +73,47 @@
           画像
         </button>
       </div>
-
-      <button type="submit" class="btn btn-primary btn-huge">退避</button>
-      <button type="button" id="btn-capture-cancel" class="btn btn-ghost">やめる</button>
     </form>
-  </section>
 
-  <!-- ===================== 2'. 退避完了 ===================== -->
-  <section id="screen-saved" class="screen" hidden>
-    <div class="saved-top">
-      <p class="saved-msg">退避した。<br>元の作業に戻る？</p>
-      <div id="haru-saved" title="ハル"></div>
+    <!-- いまの作業（下に小さく） -->
+    <div class="now-box">
+      <!-- 「まだやってる？」の軽い確認（しばらく経ったときだけ出る） -->
+      <div id="check" class="check" hidden>
+        <p id="check-text"></p>
+        <div class="row">
+          <button type="button" id="btn-check-yes" class="btn btn-quiet btn-small">やってる</button>
+          <button type="button" id="btn-check-done" class="btn btn-quiet btn-small">終わった</button>
+        </div>
+      </div>
+
+      <!-- 未登録 or 変更中のときに出る入力欄 -->
+      <form id="now-form" class="now-form" autocomplete="off">
+        <label for="now-input" class="label">いま何してる？</label>
+        <div class="now-row">
+          <input id="now-input" class="field" type="text" enterkeyhint="done"
+                 placeholder="例：春千夜のイラストを描く">
+          <button type="submit" class="btn btn-solid btn-small">これをやる</button>
+        </div>
+        <button type="button" id="btn-now-cancel" class="btn btn-ghost btn-small" hidden>やめる</button>
+      </form>
+
+      <!-- 登録済みのときに出る表示 -->
+      <div id="now-view" class="now-view" hidden>
+        <p class="label">いま：</p>
+        <p id="now-text" class="now-text"></p>
+        <div class="row">
+          <button type="button" id="btn-change" class="btn btn-quiet btn-small">変更</button>
+          <button type="button" id="btn-finish" class="btn btn-quiet btn-small">終わった</button>
+        </div>
+      </div>
     </div>
-    <p id="saved-what" class="saved-what"></p>
 
-    <div class="saved-now">
-      <p class="label">いま：</p>
-      <p id="saved-now-text" class="now-text now-text-xl"></p>
+    <div class="home-foot">
+      <button type="button" id="btn-lost" class="btn btn-quiet">わたし、何してた？</button>
+      <button type="button" id="btn-later" class="btn btn-quiet">
+        あとで見る<span id="later-count" class="count"></span>
+      </button>
     </div>
-
-    <button type="button" id="btn-back" class="btn btn-primary btn-huge">戻る</button>
-    <button type="button" id="btn-capture-more" class="btn btn-ghost">もう1つ思いついた</button>
   </section>
 
   <!-- ===================== 3. あとで見る ===================== -->
@@ -215,139 +185,6 @@
       <button type="button" id="btn-detail-complete" class="btn btn-solid">完了</button>
       <button type="button" id="btn-detail-delete" class="btn btn-ghost">削除</button>
     </div>
-  </section>
-
-  <!-- ===================== 5. ひとりごと（1日1ページの日記帳） ===================== -->
-  <section id="screen-hitori" class="screen" hidden>
-    <div class="page-head">
-      <h2 class="screen-title">ひとりごと</h2>
-    </div>
-
-    <!-- ページめくり：‹ 前に書いた日　› 次に書いた日 -->
-    <div class="hitori-nav">
-      <button type="button" id="btn-hitori-prev" class="btn btn-quiet btn-small hitori-arrow" aria-label="前に書いた日">‹</button>
-      <div class="hitori-day">
-        <p id="hitori-date" class="hitori-date"></p>
-        <p id="hitori-sub" class="hitori-sub"></p>
-      </div>
-      <button type="button" id="btn-hitori-next" class="btn btn-quiet btn-small hitori-arrow" aria-label="次に書いた日">›</button>
-    </div>
-    <button type="button" id="btn-hitori-today" class="btn btn-ghost btn-small hitori-today" hidden>今日のページへ</button>
-
-    <!-- その日のページ（左の時刻、右にひとりごと） -->
-    <div class="hitori-page">
-      <p id="hitori-empty" class="hitori-empty" hidden></p>
-      <ol id="hitori-list" class="hitori-list"></ol>
-    </div>
-
-    <!-- 書くところ（今日のページだけ）。ハルが上に座って聞いてる -->
-    <form id="hitori-form" class="hitori-form" autocomplete="off">
-      <div id="haru-hitori" class="hitori-haru" title="ハル"></div>
-      <label for="hitori-input" class="visually-hidden">ひとりごと</label>
-      <textarea id="hitori-input" class="field hitori-input" rows="2" enterkeyhint="send"
-                placeholder="だれも見てない。思ったまま。"></textarea>
-      <button type="submit" class="btn btn-primary">つぶやく</button>
-    </form>
-  </section>
-
-  <!-- ===================== 6. シール（手帳に貼る日記シール） ===================== -->
-  <section id="screen-sticker" class="screen" hidden>
-    <div class="page-head">
-      <h2 class="screen-title">シール</h2>
-    </div>
-
-    <!-- 作るものを選ぶ（js/ui-sticker.js） -->
-    <div id="st-mode" class="st-seg st-seg-3 st-mode" role="group" aria-label="作るもの">
-      <button type="button" data-v="diary">日記</button>
-      <button type="button" data-v="hitori">ひとりごと</button>
-      <button type="button" data-v="later">あとで見る</button>
-    </div>
-
-    <!-- 1. 日記シール -->
-    <div id="st-pane-diary" class="st-pane">
-    <!-- できあがり（白い紙のテープに乗せて見せる） -->
-    <div class="st-stage">
-      <div class="st-strip"><img id="st-out" alt="今日のシール" width="384"></div>
-      <button type="button" id="btn-st-save" class="btn btn-primary st-save">シールを保存</button>
-      <p id="st-msg" class="st-msg" role="status"></p>
-      <p class="st-how">保存 →「画像を保存」→ Fun Print の「画像印刷」で、幅いっぱいで印刷</p>
-    </div>
-
-    <form id="st-form" class="st-form" autocomplete="off">
-      <div class="st-two">
-        <div class="st-field"><label for="st-date" class="section-title">日付</label><input id="st-date" class="field st-input" type="date"></div>
-        <div class="st-field"><label for="st-due" class="section-title">予定日</label><input id="st-due" class="field st-input" type="date"></div>
-      </div>
-
-      <div class="st-field">
-        <span class="section-title" id="st-cond-label">体調</span>
-        <div id="st-cond" class="st-seg" role="group" aria-labelledby="st-cond-label">
-          <button type="button" data-v="good">いい</button>
-          <button type="button" data-v="ok">ふつう</button>
-          <button type="button" data-v="hard">しんどい</button>
-          <button type="button" data-v="sick">吐いた</button>
-        </div>
-      </div>
-
-      <label class="st-toggle"><input type="checkbox" id="st-checkup"> 今日は健診の日</label>
-
-      <div class="st-field">
-        <span class="section-title" id="st-food-label">たべれたもの</span>
-        <div id="st-chips" class="chips st-chips" role="group" aria-labelledby="st-food-label"></div>
-        <div class="st-add">
-          <label for="st-new-food" class="visually-hidden">ほかに食べれたもの</label>
-          <input id="st-new-food" class="field st-input" type="text" maxlength="12" placeholder="ほかに食べれたもの" enterkeyhint="done">
-          <button type="button" id="st-add-food" class="btn btn-solid btn-small">追加</button>
-        </div>
-      </div>
-
-      <div class="st-field">
-        <label for="st-memo" class="section-title">ひとこと</label>
-        <textarea id="st-memo" class="field st-input" rows="2" maxlength="60" placeholder="今日あったこと"></textarea>
-      </div>
-
-      <div class="st-field">
-        <span class="section-title" id="st-size-label">シールの大きさ</span>
-        <div id="st-size" class="st-seg st-seg-2" role="group" aria-labelledby="st-size-label">
-          <button type="button" data-v="full">ぜんぶ入り</button>
-          <button type="button" data-v="mini">ちいさめ</button>
-        </div>
-      </div>
-    </form>
-    </div>
-
-    <!-- 2. ひとりごと／あとで見る（1日分ずつ） -->
-    <div id="st-pane-list" class="st-pane" hidden>
-      <div class="st-stage">
-        <div class="st-strip"><img id="pr-out" alt="印刷する紙" width="384"></div>
-        <button type="button" id="btn-pr-save" class="btn btn-primary st-save">保存</button>
-        <p id="pr-msg" class="st-msg" role="status"></p>
-        <p class="st-how">保存 →「画像を保存」→ Fun Print の「画像印刷」で、幅いっぱいで印刷</p>
-      </div>
-
-      <form id="pr-form" class="st-form" autocomplete="off">
-        <div class="st-field" id="pr-scope-field" hidden>
-          <span class="section-title" id="pr-scope-label">入れるもの</span>
-          <div id="pr-scope" class="st-seg st-seg-2" role="group" aria-labelledby="pr-scope-label">
-            <button type="button" data-v="day">この日の分</button>
-            <button type="button" data-v="open">まだのぜんぶ</button>
-          </div>
-        </div>
-        <div class="st-field" id="pr-day-field">
-          <label for="pr-date" class="section-title">どの日</label>
-          <div class="pr-day">
-            <button type="button" id="btn-pr-prev" class="btn btn-solid btn-small pr-step" aria-label="前の日">‹</button>
-            <input id="pr-date" class="field st-input" type="date">
-            <button type="button" id="btn-pr-next" class="btn btn-solid btn-small pr-step" aria-label="次の日">›</button>
-          </div>
-          <div id="pr-days" class="chips st-chips" role="group" aria-label="書いた日"></div>
-        </div>
-        <p id="pr-note" class="pr-note" role="status"></p>
-      </form>
-    </div>
-
-    <canvas id="st-canvas" width="384" height="300" hidden></canvas>
-    <canvas id="pr-canvas" width="384" height="300" hidden></canvas>
   </section>
 
   <!-- ===================== 7. 描く（絵を描いた時間をはかる・js/ui-draw.js） ===================== -->
@@ -505,7 +342,7 @@
     <div class="card" id="sync-card">
       <h3 class="section-title">ほかの端末と同期</h3>
       <div id="sync-off">
-        <p class="note">Mac と iPhone で同じ合言葉を入れると、思いつき・作業の記録・ひとりごと・描く（タイマーも）・画像が同じになる。はじめての端末は、先に入れた端末の内容を受け取る。</p>
+        <p class="note">Mac と iPhone で同じ合言葉を入れると、思いつき・作業の記録・描く（タイマーも）・画像が同じになる。はじめての端末は、先に入れた端末の内容を受け取る。</p>
         <form id="sync-form" class="sync-form" autocomplete="off">
           <label for="sync-input" class="visually-hidden">合言葉</label>
           <input id="sync-input" class="field" type="text" placeholder="合言葉（8文字以上）" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done">
@@ -526,16 +363,12 @@
 
 </div>
 
-<!-- ===================== 下のメニュー（ホーム・ひとりごと・描く・ふりかえり・シール） =====================
+<!-- ===================== 下のメニュー（ホーム・描く・ふりかえり） =====================
      見せる画面は js/app.js の TAB_SCREENS で決めています。 -->
 <nav id="tabbar" class="tabbar" aria-label="メニュー">
   <button type="button" class="tab" data-tab="home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10v9h11v-9"/></svg>
     <span>ホーム</span>
-  </button>
-  <button type="button" class="tab" data-tab="hitori">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4h10a2 2 0 0 1 2 2v14H8a2 2 0 0 1-2-2z"/><path d="M6 18a2 2 0 0 1 2-2h10"/><path d="M10 8h5M10 11h3"/></svg>
-    <span>ひとりごと</span>
   </button>
   <button type="button" class="tab" data-tab="draw">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"/><path d="M13.5 6.5l4 4"/></svg>
@@ -544,10 +377,6 @@
   <button type="button" class="tab" data-tab="review">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>
     <span>ふりかえり</span>
-  </button>
-  <button type="button" class="tab" data-tab="sticker">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14v9l-5 5H5z"/><path d="M14 19v-4a1 1 0 0 1 1-1h4"/></svg>
-    <span>シール</span>
   </button>
 </nav>
 
@@ -568,21 +397,17 @@
 <input id="image-input" type="file" accept="image/*" hidden>
 
 <!-- 読み込む順番が大事：保存 → 部品 → 表示 → 操作 -->
-<script src="js/storage.js?v=20261016d"></script>
-<script src="js/images.js?v=20261016d"></script>
-<script src="js/haru.js?v=20261016d"></script>
-<script src="js/voice.js?v=20261016d"></script>
-<script src="js/analysis.js?v=20261016d"></script>
-<script src="js/ui.js?v=20261016d"></script>
-<script src="js/ui-later.js?v=20261016d"></script>
-<script src="js/ui-review.js?v=20261016d"></script>
-<script src="js/ui-hitori.js?v=20261016d"></script>
-<script src="js/thermal.js?v=20261016d"></script>
-<script src="js/ui-sticker.js?v=20261016d"></script>
-<script src="js/badge.js?v=20261016d"></script>
-<script src="js/ui-draw.js?v=20261016d"></script>
-<script src="js/sync.js?v=20261016d"></script>
-<script src="js/ui-routine.js?v=20261016d"></script>
-<script src="js/app.js?v=20261016d"></script>
+<script src="js/storage.js?v=20261112a"></script>
+<script src="js/images.js?v=20261112a"></script>
+<script src="js/haru.js?v=20261112a"></script>
+<script src="js/voice.js?v=20261112a"></script>
+<script src="js/analysis.js?v=20261112a"></script>
+<script src="js/ui.js?v=20261112a"></script>
+<script src="js/ui-later.js?v=20261112a"></script>
+<script src="js/ui-review.js?v=20261112a"></script>
+<script src="js/badge.js?v=20261112a"></script>
+<script src="js/ui-draw.js?v=20261112a"></script>
+<script src="js/sync.js?v=20261112a"></script>
+<script src="js/app.js?v=20261112a"></script>
 </body>
 </html>

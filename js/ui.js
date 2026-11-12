@@ -1,9 +1,9 @@
 /* =========================================================
    ui.js ― 画面表示の「共通部分」を担当するファイル
    ---------------------------------------------------------
-   ・画面の切り替え、ホーム、退避完了、迷子救済、お知らせ、日時の表示形式。
+   ・画面の切り替え、ホーム、迷子救済、お知らせ、日時の表示形式。
    ・「あとで見る」と詳細画面は js/ui-later.js、
-     「ふりかえり」は js/ui-review.js、「ひとりごと」は js/ui-hitori.js に分けてあります。
+     「ふりかえり」は js/ui-review.js、「描く」は js/ui-draw.js に分けてあります。
    ・ボタンを押した時に何をするか、は js/app.js 側に書いてあります。
    ========================================================= */
 
@@ -12,18 +12,16 @@ const UI = (() => {
 
   let toastTimer = null;
 
-  // ハル（4か所にいる）。init() で用意する
-  const haru = { home: null, saved: null, lost: null, hitori: null };
+  // ハル（ホームと迷子救済にいる。「描く」のハルは js/ui-draw.js）。init() で用意する
+  const haru = { home: null, lost: null };
 
   function init() {
     haru.home = Haru.mount($('haru-home'));
-    haru.saved = Haru.mount($('haru-saved'));
     haru.lost = Haru.mount($('haru-lost'));
-    haru.hitori = Haru.mount($('haru-hitori'));
   }
 
   // ---------------------------------------------------------
-  // 画面の切り替え：'home' / 'capture' / 'saved' / 'later' / 'detail' / 'review' / 'hitori'
+  // 画面の切り替え：'home' / 'later' / 'detail' / 'review' / 'draw'
   // ---------------------------------------------------------
   function showScreen(name) {
     document.querySelectorAll('.screen').forEach((el) => {
@@ -61,24 +59,22 @@ const UI = (() => {
   }
 
   // ---------------------------------------------------------
-  // 2'. 退避完了画面
+  // 退避したとき：ハルが受け取る（カテゴリごとに鳴き方が少し変わる）
   // ---------------------------------------------------------
-  function renderSaved(tab) {
-    const task = Storage.getCurrentTask();
-    $('saved-what').textContent = '「' + tab.text + '」' + (tab.imageId ? '（画像つき）' : '');
-
-    if (task) {
-      $('saved-now-text').textContent = task.text;
-      $('btn-back').textContent = '戻る';
-    } else {
-      $('saved-now-text').textContent = 'まだ決めてない。';
-      $('btn-back').textContent = 'ホームへ';
-    }
-    // ハルが受け取ってくれる
+  const STASH_VOICE = {
+    かうもの: ['にゃ（メモした）', 'にゃっ', 'にゃ。かご入れた'],
+    かんがえること: ['にゃ…', 'にゃーん', 'あとで考えよ'],
+    保留: ['にゃ。置いとく', 'にゃ', 'ねかせとく'],
+  };
+  function stashed(category) {
+    const list = STASH_VOICE[category] || ['にゃっ', 'にゃ', 'うけとった'];
+    haru.home.setSleeping(false);
+    haru.home.hop();
+    haru.home.meow(list[Math.floor(Math.random() * list.length)]);
+    // いまの作業がないときは、少ししたらまた寝る
     setTimeout(() => {
-      haru.saved.hop();
-      haru.saved.meow('にゃっ');
-    }, 150);
+      if (!Storage.getCurrentTask()) haru.home.setSleeping(true);
+    }, 2200);
   }
 
   // ---------------------------------------------------------
@@ -181,7 +177,7 @@ const UI = (() => {
     haru,
     showScreen,
     renderHome,
-    renderSaved,
+    stashed,
     showLost,
     hideLost,
     isLostOpen,

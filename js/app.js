@@ -14,11 +14,15 @@
   // 「まだやってる？」を出すまでの時間（分）
   const CHECK_AFTER_MINUTES = 45;
 
+  // ホームの「ワンタップでカテゴリを付けて退避」ボタン（左から順に並ぶ）
+  // 名前を変える・増やす・減らすときは、ここだけ直せばOK
+  const QUICK_CATS = ['かうもの', 'かんがえること', '保留'];
+
   const $ = (id) => document.getElementById(id);
   const on = (id, event, fn) => $(id).addEventListener(event, fn);
 
   // 下のメニューを出す画面（ここにない画面ではメニューを隠す）
-  const TAB_SCREENS = ['home', 'hitori', 'draw', 'review', 'sticker'];
+  const TAB_SCREENS = ['home', 'draw', 'review'];
 
   let current = 'home'; // いま表示中の画面
   let editing = false; // ホームで「変更」中か
@@ -34,7 +38,6 @@
     if (name === 'home') {
       editing = false;
       UI.renderHome({ showCheck: shouldCheck() });
-      RoutineUI.render();
     }
     if (name === 'later') LaterUI.renderList();
     if (name === 'review') {
@@ -42,13 +45,10 @@
       Badge.render();
     }
     if (name === 'detail') LaterUI.renderDetail();
-    if (name === 'hitori') HitoriUI.render();
-    if (name === 'sticker') StickerUI.render();
     if (name === 'draw') DrawUI.render();
     UI.showScreen(name);
     updateTabbar(name);
     Badge.update(); // アイコンの数字を合わせる
-    if (name === 'hitori') HitoriUI.scrollToEnd();
   }
 
   // 下のメニュー：いまの画面に印を付ける／メニューのない画面では隠す
@@ -65,8 +65,7 @@
   function tabClick(e) {
     const b = e.target.closest('[data-tab]');
     if (!b || b.dataset.tab === current) return;
-    if (b.dataset.tab === 'hitori') openHitori();
-    else go(b.dataset.tab);
+    go(b.dataset.tab);
   }
 
   // 「まだやってる？」を出す頃か
@@ -94,7 +93,6 @@
     const wasNew = !editing;
     editing = false;
     UI.renderHome();
-    RoutineUI.mark('pick'); // ルーティンの「今日やることを決める」に ✓
     if (wasNew) UI.haru.home.meow('にゃ'); // ハルが起きる
   }
 
@@ -130,34 +128,59 @@
   }
 
   // =========================================================
-  // 2. 思いつき入力 → 退避
+  // 2. 思いつき → 退避（ホームの一番上）
   // =========================================================
 
-  // 「＋ 思いついた」：入力画面を開いて、すぐ打てる状態にする
-  // ※ スマホでキーボードを出すため、focus() はボタンを押した処理の中で直接呼ぶ
+  // ホームのカテゴリボタンを作る（QUICK_CATS の順に並べる）
+  function renderQuickCats() {
+    const box = $('quick-cats');
+    box.textContent = '';
+    QUICK_CATS.forEach((name) => {
+      const b = UI.el('button', 'quick-cat', name);
+      b.type = 'button';
+      b.dataset.cat = name;
+      box.appendChild(b);
+    });
+  }
+
+  // 「思いついた」：入力欄へカーソルを置く（#capture で開いたとき用）
+  // ※ スマホでキーボードを出すため、focus() は押した処理の中で直接呼ぶ
   function openCapture() {
     UI.hideLost();
-    discardPendingImage();
-    $('capture-input').value = '';
-    go('capture');
+    if (current !== 'home') go('home');
     $('capture-input').focus();
   }
 
-  // 「退避」：保存して、退避完了画面へ
-  function stash(e) {
+  // 退避する。category を渡すと、そのカテゴリ付きで保存
+  function stash(e, category) {
     if (e) e.preventDefault();
     Voice.stop();
     const input = $('capture-input');
     const tab = Storage.addBrainTab(input.value, pendingImageId);
     if (!tab) {
-      input.focus();
+      input.focus(); // 空なら何もしないで入力欄へ
       return;
     }
+    if (category) Storage.setCategory(tab.id, category);
     pendingImageId = null; // 思いつきに付いたので、もう「保留中」ではない
     $('capture-attach').hidden = true;
-    input.blur();
-    UI.renderSaved(tab);
-    go('saved');
+    input.value = '';
+    input.blur(); // スマホのキーボードを閉じる
+    UI.renderHome({ showCheck: shouldCheck() });
+    UI.stashed(category);
+    // 5秒以内なら取り消せる
+    UI.toast(category ? '「' + category + '」に退避した。' : '退避した。', () => {
+      const removed = Storage.deleteBrainTab(tab.id);
+      if (removed && removed.imageId) Images.remove(removed.imageId);
+      input.value = tab.text; // 打った文字は戻す
+      UI.renderHome({ showCheck: shouldCheck() });
+    });
+  }
+
+  // カテゴリボタンを押したら、そのカテゴリで即退避
+  function quickCatClick(e) {
+    const b = e.target.closest('[data-cat]');
+    if (b) stash(e, b.dataset.cat);
   }
 
   // 入力欄で Enter を押したら即退避（Shift+Enter は改行）
@@ -168,13 +191,7 @@
     stash(e);
   }
 
-  function cancelCapture() {
-    Voice.stop();
-    discardPendingImage();
-    go('home');
-  }
-
-  // 「戻る」：ホームへ（入力欄に勝手にカーソルは置かない。キーボードが出てじゃまなので）
+  // 迷子救済から戻るとき
   function backHome() {
     go('home');
   }
@@ -342,44 +359,6 @@
   }
 
   // =========================================================
-  // 5. ひとりごと
-  // =========================================================
-  // 今日のページを開く（キーボードは、入力欄を押したときに出る）
-  function openHitori() {
-    HitoriUI.reset();
-    go('hitori');
-  }
-
-  function postHitori(e) {
-    e.preventDefault();
-    HitoriUI.post();
-  }
-
-  // =========================================================
-  // 6. 今日のルーティン（ホームの下）の横ボタン
-  // =========================================================
-  function routineGo(where) {
-    if (where === 'print') {
-      // 昨日のひとりごとから（夜中の4時までは、その前の日を「昨日」にする）
-      const base = new Date(Date.now() - 4 * 3600000);
-      const start = new Date(base.getFullYear(), base.getMonth(), base.getDate()).getTime();
-      StickerUI.openMode('hitori', { day: start - 86400000 });
-      go('sticker');
-    } else if (where === 'diary') {
-      StickerUI.openMode('diary', RoutineUI.isEasy() ? { size: 'mini' } : null); // しんどい日は「ちいさめ」で
-      go('sticker');
-    } else if (where === 'now') {
-      if (Storage.getCurrentTask()) {
-        RoutineUI.mark('pick');
-        UI.toast('もう決まってる。');
-        return;
-      }
-      window.scrollTo(0, 0);
-      $('now-input').focus(); // 押したときだけ入力欄へ
-    }
-  }
-
-  // =========================================================
   // 迷子救済
   // =========================================================
   function returnFromLost() {
@@ -393,28 +372,21 @@
   function globalKeydown(e) {
     if (e.key !== 'Escape') return;
     if (UI.isLostOpen()) return returnFromLost();
-    if (current === 'capture') return cancelCapture();
+    if (current === 'home' && document.activeElement === $('capture-input')) return $('capture-input').blur();
     if (current === 'detail') return go(detailReturn);
     if (current === 'home' && editing) return cancelChange();
     if (current !== 'home') go('home');
   }
 
-  // URLの最後が #capture なら、いきなり入力画面を開く
-  // #hitori なら、いきなり「ひとりごと」を開く
-  // #sticker なら、いきなり「シール」を開く
-  // #routine なら、ホームの「今日のルーティン」まで下ろす
+  // URLの最後が #capture なら、思いついた欄にカーソルを置く
+  // #draw なら、いきなり「描く」を開く
   // （iPhoneの「ショートカット」アプリのウィジェットから開く用）
   function handleHash() {
     const hash = location.hash;
-    if (!['#capture', '#hitori', '#sticker', '#draw', '#routine'].includes(hash)) return;
+    if (!['#capture', '#draw'].includes(hash)) return;
     history.replaceState(null, '', location.pathname + location.search);
-    if (hash === '#routine') {
-      go('home');
-      $('routine').scrollIntoView({ block: 'start' });
-    } else if (hash === '#capture') openCapture();
-    else if (hash === '#sticker') go('sticker');
-    else if (hash === '#draw') go('draw');
-    else openHitori();
+    if (hash === '#capture') openCapture();
+    else go('draw');
   }
 
   // =========================================================
@@ -427,24 +399,19 @@
   on('btn-finish', 'click', finishNow);
   on('btn-check-yes', 'click', stillDoing);
   on('btn-check-done', 'click', finishNow);
-  on('btn-capture', 'click', openCapture);
   on('btn-lost', 'click', UI.showLost);
   on('btn-later', 'click', openLater);
   // 下のメニュー
   on('tabbar', 'click', tabClick);
 
-  // 思いつき入力
-  on('capture-form', 'submit', stash);
+  // 思いつき（ホームの上）
+  on('capture-form', 'submit', (e) => stash(e));
   on('capture-input', 'keydown', captureKeydown);
-  on('btn-capture-cancel', 'click', cancelCapture);
+  on('quick-cats', 'click', quickCatClick);
   on('btn-voice', 'click', toggleVoice);
   on('btn-image', 'click', () => pickImage('capture'));
   on('btn-attach-remove', 'click', discardPendingImage);
   on('image-input', 'change', imageChosen);
-
-  // 退避完了
-  on('btn-back', 'click', backHome);
-  on('btn-capture-more', 'click', openCapture);
 
   // あとで見る
   on('search', 'input', (e) => LaterUI.setQuery(e.target.value));
@@ -469,15 +436,6 @@
   // ふりかえり
   on('today-list', 'click', openClick);
 
-  // ひとりごと
-  on('hitori-form', 'submit', postHitori);
-  on('hitori-input', 'keydown', HitoriUI.keydown);
-  on('hitori-input', 'input', HitoriUI.grow);
-  on('hitori-list', 'click', HitoriUI.listClick);
-  on('btn-hitori-prev', 'click', (e) => HitoriUI.goTo(e.currentTarget.dataset.to));
-  on('btn-hitori-next', 'click', (e) => HitoriUI.goTo(e.currentTarget.dataset.to));
-  on('btn-hitori-today', 'click', HitoriUI.goToday);
-
   // 「← ホーム」ボタン（data-go="home"）
   document.querySelectorAll('[data-go]').forEach((b) =>
     b.addEventListener('click', () => go(b.dataset.go))
@@ -495,28 +453,22 @@
     if (document.visibilityState === 'hidden') Badge.update(); // 閉じる瞬間に数字を合わせる
     if (document.visibilityState === 'visible' && current === 'home' && !editing) {
       UI.renderHome({ showCheck: shouldCheck() });
-      RoutineUI.render(); // 日が変わっていたら新しい日のぶんに
     }
   });
 
   // 別タブで更新されたとき
   window.addEventListener('storage', () => {
     if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
-    if (current === 'home') RoutineUI.render();
     if (current === 'later') LaterUI.renderList();
-    if (current === 'hitori') HitoriUI.render();
   });
 
   // ほかの端末から同期で届いたとき：いまの画面を描き直す
   window.addEventListener('noutab:synced', () => {
     if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
-    if (current === 'home') RoutineUI.render();
     if (current === 'later') LaterUI.renderList();
     if (current === 'detail') LaterUI.renderDetail();
-    if (current === 'hitori') HitoriUI.render();
     if (current === 'review') ReviewUI.render();
     if (current === 'draw') DrawUI.render();
-    if (current === 'sticker') StickerUI.refresh();
     Badge.update();
   });
 
@@ -526,8 +478,7 @@
   // 起動
   // =========================================================
   UI.init();
-  StickerUI.init();
-  RoutineUI.init({ go: routineGo });
+  renderQuickCats();
   DrawUI.init();
   Sync.init();
   $('btn-voice').hidden = !Voice.isSupported(); // 使えないブラウザではボタンを出さない

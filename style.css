@@ -260,55 +260,52 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   border-radius: 999px;
 }
 
-/* ---------- 1. ホーム ---------- */
-.now-form,
-.now-view {
+/* ---------- 1. ホーム ----------
+   上：思いついた（入力欄・カテゴリボタン・退避）
+   下：いまの作業（小さめ） */
+.capture-form {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
 }
-.now-view .row { margin-top: 0.3rem; }
-
-/* 「まだやってる？」の軽い確認 */
-.check {
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  padding: 1rem 1.1rem;
-  border-radius: 20px;
-  background: var(--accent-weak);
-}
-.check p { font-weight: 700; }
-
-/* 大きいボタン＋その上に座るハル。画面の下側（親指の届く位置）へ寄せる */
-.capture-wrap {
+/* 入力欄の右上にハルが座っている */
+.capture-box {
   position: relative;
-  margin-top: auto;
-  padding-top: 4.5rem; /* ハルの座るスペース */
 }
-.capture-wrap .haru {
+.capture-box .haru {
   position: absolute;
-  right: 22px;
-  bottom: calc(5.5rem - 10px); /* ボタンのふちに座らせる */
-  width: 88px;
+  right: 18px;
+  bottom: calc(100% - 9px); /* 入力欄のふちに座らせる（見出しの右側にはみ出す） */
+  width: 72px;
+  z-index: 1;
 }
+.capture-box .haru-bubble { right: 30%; top: -1.9rem; } /* 見出しの文字にかぶらないよう、ハルの頭の上に出す */
+.capture-form .question { padding-top: 1.4rem; } /* ハルのふきだしが出るすきま */
 
-.home-foot {
+/* ワンタップのカテゴリボタン */
+.quick-cats {
   display: grid;
-  grid-template-columns: 1.25fr 1fr; /* 左のボタンの文字が長いので少し広く */
-  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
 }
-.home-foot .btn {
-  padding-inline: 0.5rem;
-  font-size: 1rem;
+.quick-cat {
+  appearance: none;
+  min-height: 3.6rem;
+  padding: 0.4rem 0.3rem;
+  border: 1.5px solid var(--accent);
+  border-radius: 18px;
+  background: var(--accent-weak);
+  color: var(--accent);
+  font: inherit;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: transform 0.08s ease;
 }
-
-/* ---------- 2. 思いつき入力 ---------- */
-.capture-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
+.quick-cat:active { transform: scale(0.96); }
+.capture-form .btn-huge { min-height: 4.4rem; font-size: 1.5rem; }
 .tools { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 
 .attach {
@@ -336,35 +333,47 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   cursor: pointer;
 }
 
-/* ---------- 2'. 退避完了 ---------- */
-.saved-top {
+/* いまの作業（下に小さく） */
+.now-box {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem 1.1rem;
+  border-radius: var(--radius);
+  background: var(--surface);
 }
-.saved-msg {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: clamp(1.7rem, 7vw, 2.1rem);
-  line-height: 1.4;
-  padding-top: 0.4rem;
-}
-.saved-top .haru { width: 84px; flex-shrink: 0; }
-.saved-what {
-  color: var(--muted);
-  font-size: 1.05rem;
-  overflow-wrap: anywhere;
-}
-.saved-now {
+.now-form,
+.now-view {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 1.5rem 1.4rem;
-  background: var(--surface);
-  border-radius: var(--radius);
 }
-#btn-back { margin-top: auto; }
+.now-row { display: flex; gap: 0.5rem; }
+.now-row .field { flex: 1; min-width: 0; font-size: 1.1rem; padding: 0.6rem 0.9rem; background: var(--bg); }
+.now-row .btn { flex: none; }
+.now-box .now-text { font-size: clamp(1.2rem, 5vw, 1.5rem); }
+.now-box .row .btn { min-height: 2.6rem; }
+
+/* 「まだやってる？」の軽い確認 */
+.check {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+  background: var(--accent-weak);
+}
+.check p { font-weight: 700; }
+
+.home-foot {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr; /* 左のボタンの文字が長いので少し広く */
+  gap: 0.75rem;
+}
+.home-foot .btn {
+  padding-inline: 0.5rem;
+  font-size: 1rem;
+}
 
 /* ---------- 3. あとで見る ---------- */
 .page-head {
@@ -719,132 +728,6 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   to   { opacity: 1; transform: none; }
 }
 
-/* ---------- 5. ひとりごと ---------- */
-.home-sub {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: -0.4rem;
-}
-
-.hitori-nav {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.75rem;
-}
-.hitori-arrow { min-width: 3rem; font-size: 1.5rem; line-height: 1; }
-.hitori-arrow:disabled { opacity: 0.3; cursor: default; }
-.hitori-day { text-align: center; }
-.hitori-date {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 1.5rem;
-  line-height: 1.3;
-}
-.hitori-sub { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
-.hitori-today { align-self: center; margin-top: -0.8rem; }
-
-/* ノートのページ：時刻の右に、アクセント色の縦線（ノートの余白線） */
-.hitori-page {
-  flex: 1;
-  padding: 1.1rem 1.1rem 1.4rem 0.6rem;
-  border-radius: var(--radius);
-  background-color: var(--surface);
-  background-image: linear-gradient(to right, transparent calc(0.6rem + 3.7rem), var(--accent-weak) calc(0.6rem + 3.7rem), var(--accent-weak) calc(0.6rem + 3.7rem + 2px), transparent calc(0.6rem + 3.7rem + 2px));
-}
-.hitori-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.hitori-item {
-  position: relative;
-  display: grid;
-  grid-template-columns: 3.2rem minmax(0, 1fr);
-  column-gap: 1.1rem;
-  align-items: baseline;
-  cursor: pointer;
-}
-.hitori-time {
-  color: var(--muted);
-  font-size: 0.82rem;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.hitori-text {
-  font-size: 1rem;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.hitori-item.has-paw .hitori-text { padding-right: 1.7rem; }
-.hitori-del {
-  grid-column: 2;
-  justify-self: start;
-  display: none;
-  appearance: none;
-  border: 0;
-  background: none;
-  color: var(--danger);
-  font: inherit;
-  font-size: 0.92rem;
-  padding: 0.35rem 0;
-  cursor: pointer;
-}
-.hitori-item.is-open .hitori-del { display: block; }
-.hitori-empty { color: var(--muted); padding: 1.6rem 0.6rem; text-align: center; }
-
-/* ハルの肉球のはんこ */
-.hitori-paw {
-  position: absolute;
-  top: -0.35rem;
-  right: -0.4rem;
-  width: 1.8rem;
-  color: var(--accent);
-  opacity: 0.85;
-  transform: rotate(14deg);
-  pointer-events: none;
-}
-.hitori-paw.is-new { animation: paw-stamp 0.45s cubic-bezier(0.3, 0.7, 0.4, 1); }
-@keyframes paw-stamp {
-  0%   { transform: rotate(14deg) scale(1.9); opacity: 0; }
-  60%  { transform: rotate(14deg) scale(0.9); opacity: 1; }
-  100% { transform: rotate(14deg) scale(1); }
-}
-
-/* 書くところ：画面の下にくっつく。上にハルが座る */
-.hitori-form {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding-top: 4.4rem;
-  padding-bottom: 0.4rem;
-  background: linear-gradient(to bottom, transparent, var(--bg) 2.6rem);
-}
-.hitori-form .hitori-haru {
-  position: absolute; /* ハル共通の position より優先させる */
-  top: 0.3rem;
-  right: 1.1rem;
-  width: 62px;
-}
-.hitori-input {
-  font-size: 1.05rem;
-  line-height: 1.5;
-  min-height: 3.4rem;
-  max-height: 10rem;
-  resize: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hitori-paw.is-new { animation: none; }
-}
-
 /* ---------- お知らせ ---------- */
 .toast {
   position: fixed;
@@ -852,6 +735,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 20;
+  width: max-content;
   max-width: calc(100% - 32px);
   display: flex;
   align-items: center;
@@ -1013,77 +897,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   .btn { transition: none; }
 }
 
-/* ---------- 6. シール（手帳に貼る日記シール） ----------
-   できあがりは白い紙のテープに乗せて見せる（紙は配色に関係なく白）。 */
-.st-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-}
-.st-strip {
-  width: 100%;
-  max-width: 384px;
-  background: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-}
-.st-strip img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
-.st-save { width: 100%; max-width: 384px; margin-top: 0.4rem; font-family: var(--font-display); font-weight: 900; }
-.st-msg { margin: 0; min-height: 1.3em; font-size: 0.95rem; font-weight: 700; text-align: center; }
-.st-how { margin: 0; color: var(--muted); font-size: 0.85rem; text-align: center; max-width: 384px; }
-
-.st-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  padding: 1.2rem;
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-.st-field { display: flex; flex-direction: column; gap: 0.5rem; min-width: 0; }
-.st-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.75rem; }
-@media (max-width: 360px) { .st-two { grid-template-columns: 1fr; } }
-.st-input { font-size: 1.05rem; padding: 0.7rem 0.9rem; background: var(--bg); min-width: 0; }
-textarea.st-input { resize: vertical; }
-
-.st-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; }
-.st-seg-2 { grid-template-columns: 1fr 1fr; }
-.st-seg button {
-  appearance: none;
-  font: inherit;
-  font-size: 0.95rem;
-  font-weight: 700;
-  min-height: 2.9rem;
-  padding: 0.4rem 0.2rem;
-  border-radius: 14px;
-  border: 1.5px solid var(--line);
-  background: var(--bg);
-  color: var(--fg);
-  cursor: pointer;
-}
-.st-seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-
-.st-toggle { display: flex; align-items: center; gap: 0.6rem; font-weight: 700; cursor: pointer; }
-.st-toggle input { width: 1.3rem; height: 1.3rem; accent-color: var(--accent); }
-
-.st-chips { flex-wrap: wrap; overflow: visible; }
-.st-add { display: flex; gap: 0.5rem; }
-.st-add .field { flex: 1; }
-.st-add .btn { flex: none; }
-
-/* 作るものの切り替え（日記／ひとりごと／あとで見る） */
-.st-seg-3 { grid-template-columns: repeat(3, 1fr); }
-.st-pane { display: flex; flex-direction: column; gap: 1.4rem; }
-
-/* どの日（‹ 日付 ›） */
-.pr-day { display: flex; gap: 0.5rem; align-items: stretch; }
-.pr-day .field { flex: 1; }
-.pr-step { flex: none; min-width: 2.9rem; font-size: 1.3rem; font-weight: 900; }
-.pr-step:disabled { opacity: 0.4; cursor: default; }
-.pr-note { margin: 0; min-height: 1.2em; color: var(--muted); font-size: 0.9rem; font-weight: 700; }
-
-/* ---------- 下のメニュー（ホーム・ひとりごと・描く・ふりかえり・シール） ----------
+/* ---------- 下のメニュー（ホーム・描く・ふりかえり） ----------
    画面の一番下に固定。メニューがある画面では、下にその分の余白を足す。 */
 :root { --tabbar-h: calc(4rem + env(safe-area-inset-bottom, 0px)); }
 .tabbar {
@@ -1093,7 +907,7 @@ textarea.st-input { resize: vertical; }
   bottom: 0;
   z-index: 9; /* 迷子救済（10）より下、お知らせ（20）より下 */
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   max-width: 34rem;
   margin: 0 auto;
   padding: 0.35rem 0.5rem env(safe-area-inset-bottom, 0px);
@@ -1121,7 +935,6 @@ textarea.st-input { resize: vertical; }
 .tab[aria-current="page"] { color: var(--accent); }
 .tab[aria-current="page"] svg { stroke-width: 2.4; }
 body.has-tabbar .app { padding-bottom: calc(var(--tabbar-h) + 20px); }
-body.has-tabbar .hitori-form { bottom: var(--tabbar-h); }
 body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 
 /* ---------- 7. 描く（js/ui-draw.js） ---------- */
@@ -1225,78 +1038,3 @@ body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 .sync-form .field { flex: 1; min-width: 0; }
 .sync-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 #sync-code { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; word-break: break-all; }
-
-/* ---------- 7. 今日のルーティン（ホームの下） ---------- */
-.routine { margin-top: 0.4rem; }
-.routine-head { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap; }
-.routine-easy { min-height: 2.4rem; padding: 0.3rem 0.85rem; font-size: 0.9rem; }
-.routine-easy[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-
-.routine-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
-.routine-tabs button {
-  appearance: none;
-  font: inherit;
-  font-weight: 700;
-  min-height: 2.6rem;
-  border-radius: 14px;
-  border: 1.5px solid var(--line);
-  background: var(--bg);
-  color: var(--fg);
-  cursor: pointer;
-}
-.routine-tabs button[aria-selected="true"] { border-color: var(--accent); color: var(--accent); }
-.routine-tab-count { font-size: 0.85rem; color: var(--muted); margin-left: 0.2rem; }
-.routine-tabs .is-complete .routine-tab-count { color: var(--accent); }
-
-.routine-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.routine-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4rem 0.6rem;
-  padding: 0.55rem 0;
-  border-top: 1px solid var(--line);
-}
-.routine-item:first-child { border-top: 0; }
-.routine-check {
-  appearance: none;
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 2.75rem;
-  padding: 0.2rem 0;
-  border: 0;
-  background: none;
-  color: var(--fg);
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-}
-.routine-box {
-  flex: none;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 7px;
-  border: 2px solid var(--line);
-  display: grid;
-  place-items: center;
-}
-.routine-item.is-done .routine-box { background: var(--accent); border-color: var(--accent); }
-.routine-item.is-done .routine-box::after {
-  content: "";
-  width: 0.45rem;
-  height: 0.8rem;
-  border: solid var(--on-accent);
-  border-width: 0 3px 3px 0;
-  transform: translateY(-1px) rotate(45deg);
-}
-.routine-item.is-done .routine-text { color: var(--muted); text-decoration: line-through; }
-.routine-go { flex: none; min-height: 2.3rem; padding: 0.25rem 0.8rem; font-size: 0.9rem; }
-.routine-conds { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0.4rem; padding-left: 2.25rem; }
-.routine-conds .chip { min-height: 2.3rem; }
-.routine-msg { margin: 0; min-height: 1.2em; color: var(--accent); font-size: 0.92rem; font-weight: 700; }
-.routine-msg:empty { display: none; }
