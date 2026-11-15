@@ -58,13 +58,19 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 
+/* 文字の大きさ（全体）
+   ここの数字ひとつで、アプリ全体の文字・ボタン・余白がまとめて大きく／小さくなる。
+   16px がもとの大きさ。小さくしたいなら数字を下げる（13〜15pxくらいがおすすめ）。
+   ※ 入力欄だけは、iPhoneが勝手に拡大しないよう16pxより小さくならないようにしてある */
+html { font-size: 14px; }
+
 html, body { height: 100%; }
 body {
   margin: 0;
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font-body);
-  font-size: 17px;
+  font-size: 1.07rem; /* 本文（もとは17px） */
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
@@ -98,7 +104,7 @@ p, h1, h2, h3 { margin: 0; }
 .question {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.1rem, 9vw, 2.8rem);
+  font-size: clamp(2.1rem, 7.9vw, 2.8rem);
   line-height: 1.25;
   letter-spacing: 0.02em;
   padding-top: 0.4rem;
@@ -113,12 +119,12 @@ p, h1, h2, h3 { margin: 0; }
 .now-text {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.6rem, 6.8vw, 2.2rem);
+  font-size: clamp(1.6rem, 6vw, 2.2rem);
   line-height: 1.4;
   overflow-wrap: anywhere;
   word-break: auto-phrase; /* 日本語を文節で折り返す（対応ブラウザのみ） */
 }
-.now-text-xl { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+.now-text-xl { font-size: clamp(1.9rem, 7vw, 2.6rem); }
 
 .screen-title {
   font-family: var(--font-display);
@@ -229,7 +235,7 @@ p, h1, h2, h3 { margin: 0; }
 .field {
   width: 100%;
   font: inherit;
-  font-size: 1.3rem;           /* 16px以上にしてiPhoneの自動ズームを防ぐ */
+  font-size: max(16px, 1.3rem); /* 16px以上にしてiPhoneの自動ズームを防ぐ */
   color: var(--fg);
   background: var(--surface);
   border: 1.5px solid var(--line);
@@ -255,7 +261,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   resize: none;
 }
 .field-search {
-  font-size: 1.1rem;
+  font-size: max(16px, 1.1rem);
   padding: 0.75rem 1rem;
   border-radius: 999px;
 }
@@ -349,9 +355,9 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   gap: 0.5rem;
 }
 .now-row { display: flex; gap: 0.5rem; }
-.now-row .field { flex: 1; min-width: 0; font-size: 1.1rem; padding: 0.6rem 0.9rem; background: var(--bg); }
+.now-row .field { flex: 1; min-width: 0; font-size: max(16px, 1.1rem); padding: 0.6rem 0.9rem; background: var(--bg); }
 .now-row .btn { flex: none; }
-.now-box .now-text { font-size: clamp(1.2rem, 5vw, 1.5rem); }
+.now-box .now-text { font-size: clamp(1.2rem, 4.4vw, 1.5rem); }
 .now-box .row .btn { min-height: 2.6rem; }
 
 /* 「まだやってる？」の軽い確認 */
@@ -489,7 +495,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
 .detail-text {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(1.5rem, 6.5vw, 2rem);
+  font-size: clamp(1.5rem, 5.7vw, 2rem);
   line-height: 1.45;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
@@ -514,7 +520,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   display: flex;
   gap: 0.5rem;
 }
-.new-cat .field { font-size: 1.05rem; padding: 0.6rem 0.9rem; border-radius: 999px; }
+.new-cat .field { font-size: max(16px, 1.05rem); padding: 0.6rem 0.9rem; border-radius: 999px; }
 
 .link-list {
   list-style: none;
@@ -713,7 +719,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
 .lost-text {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: clamp(2.2rem, 10vw, 3.4rem);
+  font-size: clamp(2.2rem, 8.8vw, 3.4rem);
   line-height: 1.35;
   max-width: 16em;
   overflow-wrap: anywhere;
@@ -949,7 +955,7 @@ body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 }
 .draw-timer.is-over .draw-ring { background: var(--gold); }
 .draw-face-in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.3rem; padding: 0 1.6rem; }
-.draw-clock { font-family: var(--font-display); font-weight: 900; font-size: clamp(2.4rem, 12vw, 3.4rem); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.draw-clock { font-family: var(--font-display); font-weight: 900; font-size: clamp(2.4rem, 10.5vw, 3.4rem); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
 .draw-timer.is-running .draw-clock { color: var(--accent); }
 .draw-timer.is-over .draw-clock { color: var(--gold); }
 .draw-clock-sub { color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
