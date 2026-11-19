@@ -11,7 +11,7 @@
        noutab.wishes … やりたいこと
        noutab.goals  … 目標
      どちらも同期（js/sync.js）に入っている。
-   ・1件の形：{ id, text, when, createdAt, done, doneAt }
+   ・1件の形：{ id, text, when, tag, createdAt, done, doneAt }（tag は Notion から移した分だけ）
    ========================================================= */
 
 const ListsUI = (() => {
@@ -93,6 +93,12 @@ const ListsUI = (() => {
 
     const meta = document.createElement('span');
     meta.className = 'list-meta';
+    if (it.tag) {
+      const t = document.createElement('span');
+      t.className = 'list-tag';
+      t.textContent = it.tag;
+      meta.appendChild(t);
+    }
     if (it.when) {
       const w = document.createElement('span');
       w.className = 'list-when';
@@ -121,7 +127,7 @@ const ListsUI = (() => {
     $('list-input').placeholder = cfg.placeholder;
 
     const list = read(kind);
-    const open = list.filter((x) => !x.done).sort((a, b) => b.createdAt - a.createdAt);
+    const open = list.filter((x) => !x.done).sort((a, b) => b.createdAt - a.createdAt); // 新しく足したものが上
     const done = list.filter((x) => x.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
 
     $('list-open').replaceChildren(...open.map(itemHtml));
@@ -204,10 +210,65 @@ const ListsUI = (() => {
     }
   }
 
+
+  // ---------------------------------------------------------
+  // はじめの中身：Notion「やりたいこと置き場（2026/11/14）」から移したもの
+  //   ・「やりたいこと」がまだ一度も保存されていない端末でだけ、1回入る
+  //   ・id は全端末で同じ（seed1-…）なので、同期しても二重にならない
+  //   ・tag は Notion での分け方
+  // ---------------------------------------------------------
+  const SEED_KEY = 'noutab.wishes.seeded';
+  const SEED = [
+    ['体のため', '腹帯'],
+    ['体のため', '骨盤ベルト（そろそろないと腰がやばい）'],
+    ['体のため', 'レギンス（一枚じゃ足りない）'],
+    ['体のため', '蒸気でアイマスク（病院帰りの薬局かネットで）'],
+    ['体のため', '母子手帳を書く'],
+    ['家・片付け', 'ハルのトイレを洗う'],
+    ['家・片付け', 'キッチンのバカでかいダイニングテーブルを捨てる'],
+    ['家・片付け', '来客用の布団を片付ける（使ってない布団は捨てたい）'],
+    ['家・片付け', '本棚、特に書類（10年前のはもういらない）'],
+    ['家・片付け', '玄関の靴'],
+    ['家・片付け', '洗濯機の横のごちゃっとしたところ'],
+    ['家・片付け', 'ネイル用品をまとめるラック'],
+    ['家・片付け', '部屋の配置を変える'],
+    ['家・片付け', '掃除機・トイレ掃除・新聞紙'],
+    ['家・片付け', 'いらないものを捨てまくる、とにかく物を減らす'],
+    ['作るもの', 'タロットアプリ：全パターンの解説を作って、全部違う答えが出るようにする'],
+    ['作るもの', '今あるアプリを全部一個にまとめる', true],
+    ['作るもの', 'パソコンの中身を整理する'],
+    ['発信', 'noteの記事を20本くらいストック'],
+    ['発信', 'インスタとThreadsの中身を分ける（中身は素のまま、入口だけ工夫）'],
+    ['発信', 'デタラメを流布するサイト（自分の語彙を自分の認識でまとめる）'],
+    ['発信', '最低限の語彙を覚えればなんとなく分かる占星術'],
+    ['発信', 'ジンクスを調べてまとめる（テーマ別）'],
+    ['仕組み', '春千夜イメージの天然石（オニキスの次につける）', false, '産後'],
+  ];
+  function seedOnce() {
+    try {
+      if (localStorage.getItem(SEED_KEY) || localStorage.getItem(KINDS.wishes.key)) return;
+      const base = Date.parse('2026-11-14T04:55:00+09:00');
+      const list = SEED.map(([tag, text, done, when], i) => ({
+        id: 'seed1-' + String(i + 1).padStart(2, '0'),
+        text,
+        when: when || '',
+        tag,
+        createdAt: base - i, // 新しい順に並ぶので、Notionの順で上から出るよう1ミリ秒ずつ戻す
+        done: !!done,
+        doneAt: done ? Date.parse('2026-11-19T13:30:00+09:00') : null,
+      }));
+      localStorage.setItem(KINDS.wishes.key, JSON.stringify(list));
+      localStorage.setItem(SEED_KEY, '1');
+    } catch (e) {
+      /* 保存できない端末では何もしない */
+    }
+  }
+
   // ---------------------------------------------------------
   // はじめに1回
   // ---------------------------------------------------------
   function init() {
+    seedOnce();
     $('seg-wishes').addEventListener('click', () => switchKind('wishes'));
     $('seg-goals').addEventListener('click', () => switchKind('goals'));
     $('list-form').addEventListener('submit', add); // 「足す」かEnterで足す

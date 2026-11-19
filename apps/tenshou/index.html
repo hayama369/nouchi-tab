@@ -16,16 +16,16 @@ body{margin:0}
 /* 一枚の縦長の帳面。上から「月 → 変わり目 → 角度 → 逆行 → 全天体」の読む順に並べる */
 :root{
   --bg:#fbfbf9; --paper:#ffffff; --fg:#4b4a47; --muted:#8c8a85; --line:#e6e3dc;
-  --accent:#a9506c; --retro:#a3615c; --still:#a07b3c; --soft:#f3f1ec;
+  --accent:#c0438a; --retro:#a3615c; --still:#a07b3c; --soft:#f3f1ec;
   --moonlit:#ead58f; --moondark:#cfccc4;
-  --mincho:"Shippori Mincho","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --mincho:"Yu Mincho","YuMincho","Shippori Mincho","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#17171a; --paper:#1d1d21; --fg:#d9d6cf; --muted:#9a978f; --line:#34333a;
-  --accent:#dc9aae; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}}
+  --accent:#d04f97; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#17171a; --paper:#1d1d21; --fg:#d9d6cf; --muted:#9a978f; --line:#34333a;
-  --accent:#dc9aae; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}
+  --accent:#d04f97; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}
 
 body{background:var(--bg);color:var(--fg);font-family:var(--mincho);font-size:16px;line-height:1.75;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
@@ -34,8 +34,8 @@ header{display:flex;flex-direction:column;gap:14px;text-align:center}
 h1{font-size:1.5rem;font-weight:600;letter-spacing:.2em;margin:0;text-wrap:balance}
 .sub{color:var(--muted);font-size:.8rem;letter-spacing:.3em;margin:-8px 0 0}
 .when{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
-input[type=datetime-local]{font:inherit;font-size:.95rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 10px;min-width:0}
-button{font:inherit;font-size:.85rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 16px;cursor:pointer;letter-spacing:.08em}
+input[type=datetime-local]{font:inherit;font-size:.95rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:6px 10px;min-width:0}
+button{font:inherit;font-size:.85rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:3px;padding:6px 16px;cursor:pointer;letter-spacing:.08em}
 button:hover{border-color:var(--muted)}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .copybtn{background:var(--fg);color:var(--bg);border-color:var(--fg)}
@@ -46,7 +46,7 @@ h2{font-size:1.05rem;font-weight:600;margin:0;display:flex;align-items:baseline;
 h2 .n{color:var(--accent);font-size:.9rem}
 h2 .hint{color:var(--muted);font-size:.75rem;font-weight:400;letter-spacing:.05em;margin-left:auto}
 
-.summary{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.summary{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
 .summary p{margin:0}
 .summary .lead{font-size:1.05rem}
 
@@ -54,7 +54,7 @@ h2 .hint{color:var(--muted);font-size:.75rem;font-weight:400;letter-spacing:.05e
 .moon dt{color:var(--muted);font-size:.85rem}
 .moon dd{margin:0}
 .big{font-size:1.4rem;font-weight:600}
-.chip{display:inline-block;font-size:.75rem;border:1px solid currentColor;border-radius:999px;padding:0 10px;margin-left:6px;letter-spacing:.05em;vertical-align:middle;line-height:1.8}
+.chip{display:inline-block;font-size:.75rem;border:1px solid currentColor;border-radius:3px;padding:0 10px;margin-left:6px;letter-spacing:.05em;vertical-align:middle;line-height:1.8}
 .chip.void{color:var(--retro)}
 .chip.ok{color:var(--muted)}
 .chip.r{color:var(--retro)}
@@ -88,7 +88,7 @@ footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* 脳内タブへ戻る（脳内タブに取り込んだときに足したもの） */
-.nt-back{display:inline-flex;align-self:flex-start;width:fit-content;align-items:center;gap:.3em;margin:0 0 6px;padding:6px 12px 6px 9px;border:1px solid var(--line);border-radius:999px;color:var(--accent);background:var(--paper);font-size:.8rem;text-decoration:none;font-family:inherit}
+.nt-back{display:inline-flex;align-self:flex-start;width:fit-content;align-items:center;gap:.3em;margin:0 0 6px;padding:6px 12px 6px 9px;border:1px solid var(--line);border-radius:3px;color:var(--accent);background:var(--paper);font-size:.8rem;text-decoration:none;font-family:inherit}
 .nt-back svg{width:14px;height:14px}
 </style>
 </head>
@@ -507,7 +507,7 @@ if(typeof module!=="undefined") module.exports=makeCalc;
     navigator.clipboard.writeText(lastText).then(()=>{msg.textContent="コピーしました。そのままClaudeに貼れます";})
     .catch(()=>{msg.textContent="コピーできませんでした。下の文章を長押しで選んでください";
       let ta=document.getElementById('fallback');
-      if(!ta){ta=document.createElement('textarea');ta.id='fallback';ta.style.cssText='width:100%;min-height:12em;font:inherit;font-size:.8rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px';document.querySelector('header').appendChild(ta);}
+      if(!ta){ta=document.createElement('textarea');ta.id='fallback';ta.style.cssText='width:100%;min-height:12em;font:inherit;font-size:.8rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:8px';document.querySelector('header').appendChild(ta);}
       ta.value=lastText;ta.focus();ta.select();});
   });
 })();
