@@ -16,16 +16,16 @@ body{margin:0}
 /* 一枚の縦長の帳面。上から「月 → 変わり目 → 角度 → 逆行 → 全天体」の読む順に並べる */
 :root{
   --bg:#fbfbf9; --paper:#ffffff; --fg:#4b4a47; --muted:#8c8a85; --line:#e6e3dc;
-  --accent:#c0438a; --retro:#a3615c; --still:#a07b3c; --soft:#f3f1ec;
+  --accent:#b85a82; --retro:#a3615c; --still:#a07b3c; --soft:#f3f1ec;
   --moonlit:#ead58f; --moondark:#cfccc4;
   --mincho:"Yu Mincho","YuMincho","Shippori Mincho","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#17171a; --paper:#1d1d21; --fg:#d9d6cf; --muted:#9a978f; --line:#34333a;
-  --accent:#d04f97; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}}
+  --accent:#de82a7; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#17171a; --paper:#1d1d21; --fg:#d9d6cf; --muted:#9a978f; --line:#34333a;
-  --accent:#d04f97; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}
+  --accent:#de82a7; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}
 
 body{background:var(--bg);color:var(--fg);font-family:var(--mincho);font-size:16px;line-height:1.75;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}

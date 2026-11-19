@@ -15,9 +15,9 @@
   --line: #393549;        /* 枠線 */
   --fg: #efeaf1;          /* 文字 */
   --muted: #a09bb0;       /* 薄い文字 */
-  --accent: #d04f97;      /* アクセント：春千夜カラー */
-  --on-accent: #ffffff;   /* アクセント上の文字 */
-  --accent-weak: rgba(208, 79, 151, 0.16);
+  --accent: #de82a7;      /* アクセント：春千夜カラー */
+  --on-accent: #2a0f1c;   /* アクセント上の文字（淡いピンクの上は白だと読みにくいので濃い色） */
+  --accent-weak: rgba(222, 130, 167, 0.16);
   --gold: #f2c450;        /* ハルの目の色（小さな差し色） */
   --danger: #ef8a7e;
   --on-danger: #2a1210;
@@ -45,9 +45,9 @@
   --line: #e0d6de;
   --fg: #251f29;
   --muted: #6d6575;
-  --accent: #c0438a;      /* 春千夜カラー（明るい地用に少しだけ濃く） */
+  --accent: #b85a82;      /* 春千夜カラー（明るい地では #de82a7 だと文字が読めないので少し濃く） */
   --on-accent: #ffffff;
-  --accent-weak: rgba(208, 79, 151, 0.1);
+  --accent-weak: rgba(222, 130, 167, 0.14);
   --gold: #b07d12;
   --danger: #b3392d;
   --on-danger: #ffffff;
