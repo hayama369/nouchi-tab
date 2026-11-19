@@ -54,8 +54,8 @@ const UI = (() => {
     const open = Storage.getBrainTabs().filter((t) => !t.completed).length;
     $('later-count').textContent = open ? String(open) : '';
 
-    // 何もしてないとき、ハルは寝てる
-    haru.home.setSleeping(!task);
+    // ハルはいつも起きてる（「いま何してる？」をやめたので。2026-11-19）
+    haru.home.setSleeping(false);
   }
 
   // ---------------------------------------------------------
@@ -72,10 +72,6 @@ const UI = (() => {
     haru.home.setSleeping(false);
     haru.home.hop();
     haru.home.meow(list[Math.floor(Math.random() * list.length)]);
-    // いまの作業がないときは、少ししたらまた寝る
-    setTimeout(() => {
-      if (!Storage.getCurrentTask()) haru.home.setSleeping(true);
-    }, 2200);
   }
 
   // ---------------------------------------------------------

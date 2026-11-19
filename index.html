@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Maru+Gothic:wght@700;900&display=swap">
 
-  <link rel="stylesheet" href="style.css?v=20261115a">
+  <link rel="stylesheet" href="style.css?v=20261119a">
 </head>
 <body>
 <!--
@@ -29,7 +29,7 @@
   ---------------------------------------------------------
   ・画面は <section class="screen"> で区切っています。
     一度に表示されるのは1つだけ（切り替えは js/ui.js）。
-  ・文言（「いま何してる？」など）を変えたいときはここを直せばOK。
+  ・文言（「思いついた？」など）を変えたいときはここを直せばOK。
   ・id="..." は JavaScript から探すための名前なので、変えないでください。
   =========================================================
 -->
@@ -75,8 +75,9 @@
       </div>
     </form>
 
-    <!-- いまの作業（下に小さく） -->
-    <div class="now-box">
+    <!-- いまの作業：使わないので隠している（2026-11-19）。
+         JavaScript が部品を探すので消さずに hidden にしてある。戻したいときは hidden を消す -->
+    <div class="now-box" hidden>
       <!-- 「まだやってる？」の軽い確認（しばらく経ったときだけ出る） -->
       <div id="check" class="check" hidden>
         <p id="check-text"></p>
@@ -109,7 +110,7 @@
     </div>
 
     <div class="home-foot">
-      <button type="button" id="btn-lost" class="btn btn-quiet">わたし、何してた？</button>
+      <button type="button" id="btn-lost" class="btn btn-quiet" hidden>わたし、何してた？</button>
       <button type="button" id="btn-later" class="btn btn-quiet">
         あとで見る<span id="later-count" class="count"></span>
       </button>
@@ -361,9 +362,65 @@
     </div>
   </section>
 
+  <!-- ===================== 5. リスト（やりたいこと・目標／js/ui-lists.js） ===================== -->
+  <section id="screen-lists" class="screen" hidden>
+    <div class="page-head">
+      <h2 class="screen-title">リスト</h2>
+    </div>
+
+    <div class="seg" role="group" aria-label="リストの種類">
+      <button type="button" id="seg-wishes" aria-pressed="true">やりたいこと</button>
+      <button type="button" id="seg-goals" aria-pressed="false">目標</button>
+    </div>
+
+    <p id="list-lead" class="list-lead"></p>
+
+    <form id="list-form" class="list-form" autocomplete="off">
+      <label for="list-input" class="visually-hidden">追加する</label>
+      <div class="row">
+        <input id="list-input" class="field" type="text" enterkeyhint="done">
+        <button type="submit" class="btn btn-primary">足す</button>
+      </div>
+      <label for="list-when" class="visually-hidden">いつごろ</label>
+      <input id="list-when" class="field" type="text" enterkeyhint="done" placeholder="いつごろ（なくてもいい）">
+    </form>
+
+    <p id="list-empty" class="empty" hidden></p>
+    <ul id="list-open" class="list-items"></ul>
+
+    <p id="list-done-title" class="list-sub" hidden></p>
+    <ul id="list-done" class="list-items"></ul>
+  </section>
+
+  <!-- ===================== 6. アプリ（ほかのアプリへの入口） =====================
+       中身は apps/ フォルダに入っている。各アプリの左上「脳内タブ」で戻ってくる。 -->
+  <section id="screen-apps" class="screen" hidden>
+    <div class="page-head">
+      <h2 class="screen-title">アプリ</h2>
+    </div>
+
+    <div class="app-cards">
+      <a class="app-card" href="apps/tenshou/">
+        <span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M17 3.5v3M15.5 5h3"/></svg></span>
+        <span><span class="app-name">天象帳</span><br><span class="app-desc">今日の星の配置・月・逆行中の天体</span></span>
+        <span class="app-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+      <a class="app-card" href="apps/palette/">
+        <span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 1.8-.8 1.8-1.7 0-1.2-1-1.6-1-2.6 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4C21 6.6 17 3 12 3z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg></span>
+        <span><span class="app-name">PALETTE LOG</span><br><span class="app-desc">自分の絵を並べて、色と画風の変化を見る</span></span>
+        <span class="app-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+      <a class="app-card" href="apps/anshitsu/">
+        <span class="app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="6"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/><circle cx="12" cy="12" r="1.5"/></svg></span>
+        <span><span class="app-name">夜明け前暗室</span><br><span class="app-desc">画像の加工（リソ・トイカメラ・グリッチなど）</span></span>
+        <span class="app-go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span>
+      </a>
+    </div>
+  </section>
+
 </div>
 
-<!-- ===================== 下のメニュー（ホーム・描く・ふりかえり） =====================
+<!-- ===================== 下のメニュー（ホーム・描く・リスト・アプリ・ふりかえり） =====================
      見せる画面は js/app.js の TAB_SCREENS で決めています。 -->
 <nav id="tabbar" class="tabbar" aria-label="メニュー">
   <button type="button" class="tab" data-tab="home">
@@ -373,6 +430,14 @@
   <button type="button" class="tab" data-tab="draw">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"/><path d="M13.5 6.5l4 4"/></svg>
     <span>描く</span>
+  </button>
+  <button type="button" class="tab" data-tab="lists">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l2.4 5 5.4.6-4 3.7 1.1 5.4L12 15.5l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/></svg>
+    <span>リスト</span>
+  </button>
+  <button type="button" class="tab" data-tab="apps">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></svg>
+    <span>アプリ</span>
   </button>
   <button type="button" class="tab" data-tab="review">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>
@@ -397,17 +462,18 @@
 <input id="image-input" type="file" accept="image/*" hidden>
 
 <!-- 読み込む順番が大事：保存 → 部品 → 表示 → 操作 -->
-<script src="js/storage.js?v=20261115a"></script>
-<script src="js/images.js?v=20261115a"></script>
-<script src="js/haru.js?v=20261115a"></script>
-<script src="js/voice.js?v=20261115a"></script>
-<script src="js/analysis.js?v=20261115a"></script>
-<script src="js/ui.js?v=20261115a"></script>
-<script src="js/ui-later.js?v=20261115a"></script>
-<script src="js/ui-review.js?v=20261115a"></script>
-<script src="js/badge.js?v=20261115a"></script>
-<script src="js/ui-draw.js?v=20261115a"></script>
-<script src="js/sync.js?v=20261115a"></script>
-<script src="js/app.js?v=20261115a"></script>
+<script src="js/storage.js?v=20261119a"></script>
+<script src="js/images.js?v=20261119a"></script>
+<script src="js/haru.js?v=20261119a"></script>
+<script src="js/voice.js?v=20261119a"></script>
+<script src="js/analysis.js?v=20261119a"></script>
+<script src="js/ui.js?v=20261119a"></script>
+<script src="js/ui-later.js?v=20261119a"></script>
+<script src="js/ui-review.js?v=20261119a"></script>
+<script src="js/badge.js?v=20261119a"></script>
+<script src="js/ui-draw.js?v=20261119a"></script>
+<script src="js/ui-lists.js?v=20261119a"></script>
+<script src="js/sync.js?v=20261119a"></script>
+<script src="js/app.js?v=20261119a"></script>
 </body>
 </html>

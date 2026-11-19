@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbfbf9">
+<title>天象帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600&display=swap">
+<style>
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+
+/* 一枚の縦長の帳面。上から「月 → 変わり目 → 角度 → 逆行 → 全天体」の読む順に並べる */
+:root{
+  --bg:#fbfbf9; --paper:#ffffff; --fg:#4b4a47; --muted:#8c8a85; --line:#e6e3dc;
+  --accent:#a9506c; --retro:#a3615c; --still:#a07b3c; --soft:#f3f1ec;
+  --moonlit:#ead58f; --moondark:#cfccc4;
+  --mincho:"Shippori Mincho","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#17171a; --paper:#1d1d21; --fg:#d9d6cf; --muted:#9a978f; --line:#34333a;
+  --accent:#dc9aae; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17171a; --paper:#1d1d21; --fg:#d9d6cf; --muted:#9a978f; --line:#34333a;
+  --accent:#dc9aae; --retro:#d79a94; --still:#d6b16f; --soft:#232328; --moonlit:#ece2bd; --moondark:#2e2e35; color-scheme:dark}
+
+body{background:var(--bg);color:var(--fg);font-family:var(--mincho);font-size:16px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:36px}
+header{display:flex;flex-direction:column;gap:14px;text-align:center}
+h1{font-size:1.5rem;font-weight:600;letter-spacing:.2em;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.8rem;letter-spacing:.3em;margin:-8px 0 0}
+.when{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+input[type=datetime-local]{font:inherit;font-size:.95rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 10px;min-width:0}
+button{font:inherit;font-size:.85rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:6px 16px;cursor:pointer;letter-spacing:.08em}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.copybtn{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.note{font-size:.8rem;color:var(--muted);text-align:center;min-height:1.2em}
+
+section{display:flex;flex-direction:column;gap:14px}
+h2{font-size:1.05rem;font-weight:600;margin:0;display:flex;align-items:baseline;gap:10px;letter-spacing:.08em}
+h2 .n{color:var(--accent);font-size:.9rem}
+h2 .hint{color:var(--muted);font-size:.75rem;font-weight:400;letter-spacing:.05em;margin-left:auto}
+
+.summary{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:6px}
+.summary p{margin:0}
+.summary .lead{font-size:1.05rem}
+
+.moon{display:grid;grid-template-columns:auto 1fr;gap:6px 18px;align-items:baseline}
+.moon dt{color:var(--muted);font-size:.85rem}
+.moon dd{margin:0}
+.big{font-size:1.4rem;font-weight:600}
+.chip{display:inline-block;font-size:.75rem;border:1px solid currentColor;border-radius:999px;padding:0 10px;margin-left:6px;letter-spacing:.05em;vertical-align:middle;line-height:1.8}
+.chip.void{color:var(--retro)}
+.chip.ok{color:var(--muted)}
+.chip.r{color:var(--retro)}
+.chip.st{color:var(--still)}
+
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ul.list li{display:grid;grid-template-columns:5.6em 1fr;gap:14px;padding:10px 0;border-top:1px solid var(--line);align-items:baseline}
+ul.list li:last-child{border-bottom:1px solid var(--line)}
+.when-col{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem;line-height:1.4}
+.when-col b{display:block;color:var(--fg);font-weight:600;font-size:.95rem}
+li.key .what{font-weight:600}
+li.key .when-col b{color:var(--accent)}
+.what small{display:block;color:var(--muted);font-size:.8rem}
+.empty{color:var(--muted);font-size:.9rem;margin:0}
+
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 6px;border-top:1px solid var(--line);white-space:nowrap}
+th{font-weight:400;color:var(--muted);font-size:.8rem}
+tr:last-child td{border-bottom:1px solid var(--line)}
+td.sym{color:var(--muted);width:1.5em}
+.slow td{color:var(--muted)}
+.slow td.name{color:var(--fg)}
+.moonrow{display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.moonfig{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 auto}
+.moonfig svg{width:112px;height:112px;display:block}
+.moonfig span{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.moonrow .moon{flex:1 1 260px;min-width:0}
+.mlit{fill:var(--moonlit)}.mdark{fill:var(--moondark)}.mring{fill:none;stroke:var(--line)}
+footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* 脳内タブへ戻る（脳内タブに取り込んだときに足したもの） */
+.nt-back{display:inline-flex;align-self:flex-start;width:fit-content;align-items:center;gap:.3em;margin:0 0 6px;padding:6px 12px 6px 9px;border:1px solid var(--line);border-radius:999px;color:var(--accent);background:var(--paper);font-size:.8rem;text-decoration:none;font-family:inherit}
+.nt-back svg{width:14px;height:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="nt-back" href="../../#apps"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>脳内タブ</a>
+  <header>
+    <h1>天象帳</h1>
+    <p class="sub">TRANSIT NOTE</p>
+    <div class="when">
+      <input type="datetime-local" id="dt" aria-label="日時（日本時間）">
+      <button id="now" type="button">今に戻す</button>
+      <button id="copy" class="copybtn" type="button">文章でコピー</button>
+    </div>
+    <p class="note" id="msg">日本時間で計算しています</p>
+  </header>
+
+  <section aria-labelledby="h-sum">
+    <h2 id="h-sum">今日のまとめ</h2>
+    <div class="summary" id="summary"><p>計算しています…</p></div>
+  </section>
+
+  <section aria-labelledby="h-moon">
+    <h2 id="h-moon"><span class="n">一</span>月<span class="hint">毎日変わる、今日の空気</span></h2>
+    <div class="moonrow">
+      <div class="moonfig"><svg id="moonsvg" viewBox="0 0 100 100" role="img" aria-label="今の月の形"></svg><span id="moonpct"></span></div>
+      <dl class="moon" id="moon"></dl>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-ev">
+    <h2 id="h-ev"><span class="n">二</span>変わり目<span class="hint">これから2週間</span></h2>
+    <ul class="list" id="events"></ul>
+  </section>
+
+  <section aria-labelledby="h-asp">
+    <h2 id="h-asp"><span class="n">三</span>ぴったりの角度<span class="hint">誤差2°以内（月は3°）</span></h2>
+    <ul class="list" id="aspects"></ul>
+  </section>
+
+  <section aria-labelledby="h-r">
+    <h2 id="h-r"><span class="n">四</span>逆行中の天体</h2>
+    <ul class="list" id="retros"></ul>
+  </section>
+
+  <section aria-labelledby="h-pos">
+    <h2 id="h-pos"><span class="n">五</span>全天体の位置<span class="hint">木星から外は背景</span></h2>
+    <div class="tablewrap"><table><thead><tr><th></th><th>天体</th><th>星座</th><th>度数</th><th>運行</th></tr></thead><tbody id="pos"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="h-show">
+    <h2 id="h-show"><span class="n">六</span>天体ショー<span class="hint">見える場所は東京で計算</span></h2>
+    <ul class="list" id="shows"></ul>
+  </section>
+
+  <footer>トロピカル・ジオセントリック（地球から見た黄道上の位置）。<br>時刻は計算上の目安で、数分ずれることがあります。</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+<script>
+// 天象の計算（ブラウザでもnodeでも動く）
+function makeCalc(A){
+  const SIGNS=["牡羊座","牡牛座","双子座","蟹座","獅子座","乙女座","天秤座","蠍座","射手座","山羊座","水瓶座","魚座"];
+  const BODIES=[
+    {key:"Sun",ja:"太陽",sym:"☉",fast:true},
+    {key:"Moon",ja:"月",sym:"☽",fast:true},
+    {key:"Mercury",ja:"水星",sym:"☿",fast:true},
+    {key:"Venus",ja:"金星",sym:"♀",fast:true},
+    {key:"Mars",ja:"火星",sym:"♂",fast:true},
+    {key:"Jupiter",ja:"木星",sym:"♃",fast:false},
+    {key:"Saturn",ja:"土星",sym:"♄",fast:false},
+    {key:"Uranus",ja:"天王星",sym:"♅",fast:false},
+    {key:"Neptune",ja:"海王星",sym:"♆",fast:false},
+    {key:"Pluto",ja:"冥王星",sym:"♇",fast:false},
+  ];
+  const ASPECTS=[
+    {deg:0,ja:"合（0°）",short:"0°"},
+    {deg:60,ja:"セクスタイル（60°）",short:"60°"},
+    {deg:90,ja:"スクエア（90°）",short:"90°"},
+    {deg:120,ja:"トライン（120°）",short:"120°"},
+    {deg:180,ja:"オポジション（180°）",short:"180°"},
+  ];
+  const DAY=86400000;
+  const norm=x=>((x%360)+360)%360;
+  const sdiff=x=>{x=norm(x);return x>180?x-360:x;}; // -180..180
+
+  function lon(key,date){
+    if(key==="Moon") return norm(A.EclipticGeoMoon(date).lon);
+    if(key==="Sun") return norm(A.SunPosition(date).elon);
+    const v=A.GeoVector(A.Body[key],date,true);
+    return norm(A.Ecliptic(v).elon);
+  }
+  function speed(key,date){ // 度/日
+    const h=key==="Moon"?0.05:0.5;
+    const a=lon(key,new Date(date.getTime()-h*DAY)), b=lon(key,new Date(date.getTime()+h*DAY));
+    return sdiff(b-a)/(2*h);
+  }
+  const signOf=l=>Math.floor(norm(l)/30);
+  function fmtDeg(l){const d=norm(l)%30;const di=Math.floor(d);let m=Math.round((d-di)*60);let dd=di;if(m===60){dd++;m=0;}return dd+"°"+String(m).padStart(2,"0")+"'";}
+
+  // 関数fの符号が変わる時刻を二分法で
+  function bisect(f,t0,t1,iter=40){
+    let a=t0,b=t1,fa=f(a);
+    for(let i=0;i<iter;i++){const m=(a+b)/2,fm=f(m);if((fa<0)===(fm<0)){a=m;fa=fm;}else b=m;}
+    return (a+b)/2;
+  }
+  // 次の星座移動
+  function nextIngress(key,date,dir=1,maxDays=400){
+    const step=(key==="Moon"?0.1:key==="Sun"||key==="Mercury"||key==="Venus"?0.5:key==="Mars"?1:3)*DAY;
+    let t=date.getTime(), s=signOf(lon(key,new Date(t)));
+    for(let n=0;n<maxDays*DAY/step;n++){
+      const t2=t+dir*step, s2=signOf(lon(key,new Date(t2)));
+      if(s2!==s){
+        const lo=Math.min(t,t2),hi=Math.max(t,t2);
+        const sl=signOf(lon(key,new Date(lo)));
+        const tt=bisect(x=>signOf(lon(key,new Date(x)))===sl?-1:1,lo,hi,30);
+        return {time:new Date(tt),from:dir>0?s:s2,to:dir>0?s2:s};
+      }
+      t=t2;
+    }
+    return null;
+  }
+  // 留（向きが変わる時）を探す
+  function findStation(key,date,dir=1,maxDays=400){
+    if(key==="Sun"||key==="Moon") return null;
+    const step=(key==="Mercury"||key==="Venus"?0.5:key==="Mars"?1:2)*DAY;
+    let t=date.getTime(), v=speed(key,new Date(t));
+    for(let n=0;n<maxDays*DAY/step;n++){
+      const t2=t+dir*step, v2=speed(key,new Date(t2));
+      if((v<0)!==(v2<0)){
+        const lo=Math.min(t,t2),hi=Math.max(t,t2);
+        const tt=bisect(x=>speed(key,new Date(x)),lo,hi,35);
+        const after=speed(key,new Date(tt+2*DAY));
+        return {time:new Date(tt),toRetro:after<0};
+      }
+      t=t2;v=v2;
+    }
+    return null;
+  }
+  // 月と他の天体のアスペクト成立時刻（区間内）
+  function moonAspectTimes(t0,t1){
+    const out=[];const step=0.05*DAY;
+    for(const b of BODIES){ if(b.key==="Moon") continue;
+      for(const asp of ASPECTS){
+        const targets=asp.deg===0||asp.deg===180?[asp.deg]:[asp.deg,-asp.deg];
+        for(const tg of targets){
+          const f=x=>sdiff(lon("Moon",new Date(x))-lon(b.key,new Date(x))-tg);
+          let a=t0,fa=f(a);
+          for(let x=t0+step;x<=t1+1;x+=step){
+            const fx=f(x);
+            if((fa<0)!==(fx<0)&&Math.abs(fa-fx)<90){out.push({time:new Date(bisect(f,x-step,x,30)),body:b,asp});}
+            a=x;fa=fx;
+          }
+        }
+      }
+    }
+    return out.sort((p,q)=>p.time-q.time);
+  }
+  function voidInfo(date){
+    const prev=nextIngress("Moon",date,-1,5), next=nextIngress("Moon",date,1,5);
+    const asp=moonAspectTimes(prev.time.getTime(),next.time.getTime());
+    const last=asp.length?asp[asp.length-1]:null;
+    const cur={start:last?last.time:prev.time,end:next.time,last,toSign:next.to};
+    if(date<cur.end && date>=cur.start) return {now:true,...cur};
+    if(date<cur.start) return {now:false,...cur};
+    // 次の星座ぶん
+    const n2=nextIngress("Moon",new Date(next.time.getTime()+60000),1,5);
+    const a2=moonAspectTimes(next.time.getTime(),n2.time.getTime());
+    const l2=a2.length?a2[a2.length-1]:null;
+    return {now:false,start:l2?l2.time:next.time,end:n2.time,last:l2,toSign:n2.to};
+  }
+  function moonInfo(date){
+    const phase=A.MoonPhase(date); // 0-360
+    const prevNew=A.SearchMoonPhase(0,new Date(date.getTime()-30*DAY),30.5);
+    let pn=prevNew; // 直前の新月
+    let tries=0; while(pn && pn.date>date && tries<3){pn=A.SearchMoonPhase(0,new Date(pn.date.getTime()-31*DAY),30);tries++;}
+    // 最も近い過去の新月
+    let cand=A.SearchMoonPhase(0,new Date(date.getTime()-31*DAY),31);
+    while(true){const nx=A.SearchMoonPhase(0,new Date(cand.date.getTime()+DAY),31); if(nx && nx.date<=date) cand=nx; else break;}
+    const age=(date-cand.date)/DAY;
+    const nextNew=A.SearchMoonPhase(0,date,31), nextFull=A.SearchMoonPhase(180,date,31);
+    let name;
+    if(phase<6||phase>=354) name="新月";
+    else if(phase<45) name="三日月の頃";
+    else if(phase<84) name="上弦に向かう月";
+    else if(phase<96) name="上弦の月";
+    else if(phase<174) name="満ちていく月";
+    else if(phase<186) name="満月";
+    else if(phase<264) name="欠けていく月";
+    else if(phase<276) name="下弦の月";
+    else name="新月に向かう月";
+    return {phase,age,name,nextNew:nextNew.date,nextFull:nextFull.date,prevNew:cand.date};
+  }
+  function positions(date){
+    return BODIES.map(b=>{const l=lon(b.key,date);const v=speed(b.key,date);
+      return {...b,lon:l,sign:signOf(l),deg:fmtDeg(l),speed:v,retro:v<0,station:b.key!=="Sun"&&b.key!=="Moon"&&Math.abs(v)<(b.key==="Mercury"?0.15:b.key==="Venus"?0.08:b.key==="Mars"?0.05:0.005)};});
+  }
+  function aspectsNow(pos){
+    const out=[];
+    for(let i=0;i<pos.length;i++)for(let j=i+1;j<pos.length;j++){
+      const a=pos[i],b=pos[j]; if(!a.fast&&!b.fast) continue;
+      const sep=Math.abs(sdiff(a.lon-b.lon));
+      for(const asp of ASPECTS){
+        const orb=Math.abs(sep-asp.deg);
+        const lim=(a.key==="Moon"||b.key==="Moon")?3:2;
+        if(orb<=lim){
+          // 近づいているか
+          const dt=0.1;
+          const la=a.lon+a.speed*dt, lb=b.lon+b.speed*dt;
+          const orb2=Math.abs(Math.abs(sdiff(la-lb))-asp.deg);
+          out.push({a,b,asp,orb,applying:orb2<orb});
+        }
+      }
+    }
+    return out.sort((p,q)=>p.orb-q.orb);
+  }
+  function retroPeriods(date,pos){
+    const out=[];
+    for(const p of pos){ if(p.key==="Sun"||p.key==="Moon") continue;
+      if(p.retro){
+        // いま逆行中：直前の「逆行に入った日」から、次の「順行に戻る日」まで
+        const end=findStation(p.key,date,1,300);
+        const start=findStation(p.key,date,-1,300);
+        out.push({p,start:start?start.time:null,end:end?end.time:null,soon:false});
+      }else if(p.station){
+        // 順行のまま止まりかけ：もうすぐ逆行に入る時だけ載せる（順行に戻ったばかりなら載せない）
+        const nx=findStation(p.key,date,1,10);
+        if(nx&&nx.toRetro){
+          const end=findStation(p.key,new Date(nx.time.getTime()+86400000),1,300);
+          out.push({p,start:nx.time,end:end?end.time:null,soon:true});
+        }
+      }
+    }
+    return out;
+  }
+  // これからの変わり目（days日先まで）＋直近（back日前から）
+  function upcoming(date,days=14,back=1){
+    const t0=new Date(date.getTime()-back*DAY), t1=date.getTime()+days*DAY;
+    const ev=[];
+    for(const b of BODIES){
+      if(b.key!=="Moon"){
+        let t=t0;
+        for(let k=0;k<6;k++){const ig=nextIngress(b.key,t,1,days+back+1); if(!ig||ig.time.getTime()>t1) break; ev.push({time:ig.time,kind:"ingress",body:b,text:`${b.ja}が${SIGNS[ig.to]}へ`}); t=new Date(ig.time.getTime()+3600000);}
+        let s=t0;
+        for(let k=0;k<4;k++){const st=findStation(b.key,s,1,days+back+1); if(!st||st.time.getTime()>t1) break; ev.push({time:st.time,kind:"station",body:b,text:st.toRetro?`${b.ja}が逆行に入る`:`${b.ja}が順行に戻る`}); s=new Date(st.time.getTime()+DAY);}
+      }
+    }
+    // 新月・満月
+    let s=t0;
+    for(let k=0;k<4;k++){const nm=A.SearchMoonQuarter(s); if(!nm||nm.time.date.getTime()>t1) break; if(nm.quarter===0||nm.quarter===2){const ml=lon("Moon",nm.time.date);ev.push({time:nm.time.date,kind:nm.quarter===0?"new":"full",body:BODIES[1],text:`${SIGNS[signOf(ml)]}で${nm.quarter===0?"新月":"満月"}`});} s=new Date(nm.time.date.getTime()+3600000);}
+    return ev.sort((a,b)=>a.time-b.time);
+  }
+  return {SIGNS,BODIES,ASPECTS,lon,speed,signOf,fmtDeg,positions,aspectsNow,retroPeriods,upcoming,voidInfo,moonInfo,nextIngress};
+}
+if(typeof module!=="undefined") module.exports=makeCalc;
+
+
+(function(){
+  const msg=document.getElementById('msg');
+  if(typeof Astronomy==="undefined"){msg.textContent="計算ライブラリを読み込めませんでした。少し待って再読み込みしてください。";return;}
+  const C=makeCalc(Astronomy);
+  const DAY=86400000;
+  const tz={timeZone:'Asia/Tokyo'};
+  const ymd=d=>d.toLocaleDateString('sv-SE',tz);
+  const md=d=>{const p=new Intl.DateTimeFormat('ja-JP',{...tz,month:'numeric',day:'numeric',weekday:'short'}).formatToParts(d);const g=t=>p.find(x=>x.type===t).value;return `${g('month')}/${g('day')}（${g('weekday')}）`;};
+  const hm=d=>d.toLocaleTimeString('ja-JP',{...tz,hour:'2-digit',minute:'2-digit'});
+  const full=d=>`${md(d)} ${hm(d)}`;
+  function rel(d,base){
+    const a=new Date(ymd(base)+"T00:00:00+09:00"),b=new Date(ymd(d)+"T00:00:00+09:00");
+    const n=Math.round((b-a)/DAY);
+    return n===0?"今日":n===1?"明日":n===-1?"昨日":n>0?`${n}日後`:`${-n}日前`;
+  }
+  const dt=document.getElementById('dt');
+  function toInput(d){const s=d.toLocaleString('sv-SE',tz).replace(' ','T');return s.slice(0,16);}
+  function fromInput(v){return new Date(v+":00+09:00");}
+  let lastText="";
+
+  function render(date){
+    const pos=C.positions(date);
+    const moonPos=pos[1];
+    const mi=C.moonInfo(date);
+    const vi=C.voidInfo(date);
+    const nextIg=C.nextIngress("Moon",date,1,5);
+    const ev=C.upcoming(date,14,1).filter(e=>e.time>=new Date(date.getTime()-DAY));
+    const asp=C.aspectsNow(pos);
+    const rp=C.retroPeriods(date,pos);
+
+    // 一 月
+    const voidHtml = vi.now
+      ? `<span class="chip void">ボイド中</span><br><small>${full(vi.start)} 〜 ${full(vi.end)}</small>`
+      : `<span class="chip ok">ボイドではない</span><br><small>次のボイド：${full(vi.start)} 〜 ${full(vi.end)}（${rel(vi.start,date)}）</small>`;
+    document.getElementById('moon').innerHTML=`
+      <dt>星座</dt><dd><span class="big">${C.SIGNS[moonPos.sign]}</span> ${moonPos.deg}</dd>
+      <dt>月齢</dt><dd>${mi.age.toFixed(1)}（${mi.name}）</dd>
+      <dt>ボイド</dt><dd>${voidHtml}${vi.last?`<br><small>最後の角度：${vi.last.body.ja}と${vi.last.asp.short}</small>`:""}</dd>
+      <dt>次の星座</dt><dd>${full(nextIg.time)} に${C.SIGNS[nextIg.to]}へ</dd>
+      <dt>新月・満月</dt><dd>満月 ${full(mi.nextFull)}<br>新月 ${full(mi.nextNew)}</dd>`;
+
+    drawMoon(mi.phase);
+
+    // 六 天体ショー
+    document.getElementById('shows').innerHTML = shows(date).map(s=>`<li class="${s.key?'key':''}"><span class="when-col"><b>${rel(s.time,date)}</b>${md(s.time)}${s.clock?`<br>${hm(s.time)}`:""}</span><span class="what">${s.title}<small>${s.sub}</small></span></li>`).join("");
+
+    // 二 変わり目
+    const evEl=document.getElementById('events');
+    evEl.innerHTML = ev.length ? ev.map(e=>{
+      const key = e.kind==="station" || (Math.abs(e.time-date)<1.5*DAY);
+      const sub = e.kind==="station" ? (e.body.fast?"逆行の始まり・終わり。止まって向きを変える時":"ゆっくりの天体。前後数日は留") : e.kind==="ingress" ? "星座の移動" : "月の満ち欠け";
+      return `<li class="${key?'key':''}"><span class="when-col"><b>${rel(e.time,date)}</b>${md(e.time)}<br>${hm(e.time)}</span><span class="what">${e.text}<small>${sub}</small></span></li>`;
+    }).join("") : `<li><span></span><p class="empty">2週間以内に大きな変わり目はありません</p></li>`;
+
+    // 三 角度
+    const aEl=document.getElementById('aspects');
+    aEl.innerHTML = asp.length ? asp.map(a=>`<li><span class="when-col"><b>${a.asp.short}</b>誤差${a.orb.toFixed(1)}°</span><span class="what">${a.a.ja}と${a.b.ja}<small>${a.asp.ja}・${a.applying?"近づいている":"離れていく"}</small></span></li>`).join("")
+      : `<li><span></span><p class="empty">今はぴったりの角度はありません</p></li>`;
+
+    // 四 逆行
+    const rEl=document.getElementById('retros');
+    rEl.innerHTML = rp.length ? rp.map(r=>{
+      const st = r.p.station ? `<span class="chip st">留</span>` : `<span class="chip r">逆行</span>`;
+      const slow=!r.p.fast;
+      const f=d=>d?(slow?md(d):full(d)):"—";
+      const note = r.soon ? `もうすぐ逆行に入ります（${rel(r.start,date)}）` : (r.end?`順行に戻るまで${rel(r.end,date)}`:"");
+      return `<li><span class="when-col"><b>${r.p.ja}</b>${C.SIGNS[r.p.sign]}</span><span class="what">${st} ${f(r.start)} 〜 ${f(r.end)}<small>${note}</small></span></li>`;
+    }).join("") : `<li><span></span><p class="empty">逆行中の天体はありません</p></li>`;
+
+    // 五 全天体
+    document.getElementById('pos').innerHTML = pos.map(p=>`<tr class="${p.fast?'':'slow'}"><td class="sym">${p.sym}</td><td class="name">${p.ja}</td><td>${C.SIGNS[p.sign]}</td><td>${p.deg}</td><td>${p.station?`<span class="chip st">留</span>`:p.retro?'<span class="chip r">逆行</span>':'順行'}</td></tr>`).join("");
+
+    // まとめ
+    const soon=ev.filter(e=>e.time>=date && e.time-date<2*DAY);
+    const lines=[];
+    lines.push(`月は${C.SIGNS[moonPos.sign]}。月齢${mi.age.toFixed(1)}、${mi.name}。`);
+    lines.push(vi.now?`いまボイド中（${hm(vi.end)}まで）。`:`ボイドは${rel(vi.start,date)} ${hm(vi.start)}〜${rel(vi.end,date)} ${hm(vi.end)}。`);
+    if(soon.length) lines.push(`変わり目：${soon.map(e=>`${rel(e.time,date)} ${hm(e.time)} ${e.text}`).join("、")}。`);
+    const tight=asp.filter(a=>a.orb<=1.5&&a.a.key!=="Moon"&&a.b.key!=="Moon");
+    if(tight.length) lines.push(`角度：${tight.map(a=>`${a.a.ja}と${a.b.ja}が${a.asp.short}`).join("、")}。`);
+    document.getElementById('summary').innerHTML = `<p class="lead">${lines[0]}</p>`+lines.slice(1).map(l=>`<p>${l}</p>`).join("");
+
+    // コピー用の文章
+    lastText = [
+      `【${full(date)} の天象】`,
+      ...lines,
+      "",
+      "■月",
+      `${C.SIGNS[moonPos.sign]} ${moonPos.deg} / 月齢${mi.age.toFixed(1)}（${mi.name}）`,
+      vi.now?`ボイド中：${full(vi.start)}〜${full(vi.end)}`:`次のボイド：${full(vi.start)}〜${full(vi.end)}`,
+      `次の星座：${full(nextIg.time)} ${C.SIGNS[nextIg.to]}へ`,
+      "",
+      "■変わり目（2週間）",
+      ...ev.map(e=>`${full(e.time)} ${e.text}`),
+      "",
+      "■ぴったりの角度",
+      ...(asp.length?asp.map(a=>`${a.a.ja}と${a.b.ja} ${a.asp.short}（誤差${a.orb.toFixed(1)}°・${a.applying?"接近":"分離"}）`):["なし"]),
+      "",
+      "■逆行中",
+      ...(rp.length?rp.map(r=>`${r.p.ja}（${C.SIGNS[r.p.sign]}）${r.p.station?"留 ":""}${r.start?md(r.start):"—"}〜${r.end?md(r.end):"—"}`):["なし"]),
+      "",
+      "■全天体",
+      ...pos.map(p=>`${p.ja} ${C.SIGNS[p.sign]} ${p.deg}${p.station?" 留":p.retro?" 逆行":""}`)
+    ].join("\n");
+  }
+
+  // 月の形を描く（北半球から見た向き。満ちていく月は右が明るい）
+  function drawMoon(p){
+    const svg=document.getElementById('moonsvg');
+    const waxing=p<=180, q=waxing?p:360-p; // 0〜180に揃える
+    const c=Math.cos(q*Math.PI/180), r=42, cx=50, cy=50, rx=Math.abs(c)*r;
+    const sweepT = q<90 ? 0 : 1; // 三日月は明るい側へ膨らむ、十三夜以降は反対へ
+    const lit = q<0.5 ? "" : `<path class="mlit" d="M${cx} ${cy-r} A${r} ${r} 0 0 1 ${cx} ${cy+r} A${rx} ${r} 0 0 ${sweepT} ${cx} ${cy-r} Z"${waxing?"":` transform="translate(100 0) scale(-1 1)"`}/>`;
+    svg.innerHTML=`<circle class="mdark" cx="${cx}" cy="${cy}" r="${r}"/>${q>179.5?`<circle class="mlit" cx="${cx}" cy="${cy}" r="${r}"/>`:lit}<circle class="mring" cx="${cx}" cy="${cy}" r="${r}"/>`;
+    const frac=(1-Math.cos(p*Math.PI/180))/2;
+    document.getElementById('moonpct').textContent=`輝いている面 ${Math.round(frac*100)}%`;
+  }
+
+  // 天体ショー：月食・日食・流星群
+  const OBS=new Astronomy.Observer(35.68,139.77,0);
+  const KIND={penumbral:"半影月食",partial:"部分",total:"皆既",annular:"金環日食",hybrid:"金環皆既日食"};
+  const METEORS=[[1,4,"しぶんぎ座流星群"],[4,22,"4月こと座流星群"],[5,6,"みずがめ座η流星群"],[7,30,"みずがめ座δ南流星群"],[8,13,"ペルセウス座流星群"],[10,21,"オリオン座流星群"],[11,17,"しし座流星群"],[12,14,"ふたご座流星群"]];
+  function shows(date){
+    const out=[];
+    // 流星群（極大日はおよそ。年によって前後する）
+    const y=Number(ymd(date).slice(0,4));
+    const ms=[];
+    for(const yy of [y,y+1]) for(const [m,dd,n] of METEORS){const t=new Date(`${yy}-${String(m).padStart(2,"0")}-${String(dd).padStart(2,"0")}T21:00:00+09:00`); if(t>=new Date(date.getTime()-DAY)) ms.push({time:t,title:n,sub:"極大はこの日ごろ。年によって前後します",clock:false});}
+    ms.sort((a,b)=>a.time-b.time); out.push(...ms.slice(0,2));
+    // 月食
+    try{
+      let le=Astronomy.SearchLunarEclipse(date);
+      const eq=Astronomy.Equator(Astronomy.Body.Moon,le.peak,OBS,true,true);
+      const h=Astronomy.Horizon(le.peak,OBS,eq.ra,eq.dec,'normal');
+      const nm=le.kind==="penumbral"?"半影月食":`${KIND[le.kind]}月食`;
+      out.push({time:le.peak.date,title:`${nm}`,sub:h.altitude>0?"東京で見える（月が地平線の上）":"東京では月が沈んでいて見えない",clock:true});
+    }catch(e){}
+    // 日食（世界のどこかで）と、東京で見える日食
+    try{
+      const g=Astronomy.SearchGlobalSolarEclipse(date);
+      out.push({time:g.peak.date,title:KIND[g.kind]?(g.kind==="partial"?"部分日食":KIND[g.kind]):"日食",sub:"世界のどこかで見える日食。日本で見えるとは限りません",clock:true});
+      const l=Astronomy.SearchLocalSolarEclipse(date,OBS);
+      out.push({time:l.peak.time.date,title:`東京で見える日食（${l.kind==="partial"?"部分日食":KIND[l.kind]||"日食"}）`,sub:`太陽の${Math.round(l.obscuration*100)}%が隠れる`,clock:true});
+    }catch(e){}
+    out.forEach(s=>s.key=(s.time-date)<7*DAY);
+    return out.sort((a,b)=>a.time-b.time);
+  }
+
+  function run(d){
+    msg.textContent="計算しています…";
+    setTimeout(()=>{try{render(d);msg.textContent="日本時間で計算しています";}catch(e){msg.textContent="計算できませんでした。日時を変えてもう一度試してください。";console.error(e);}},10);
+  }
+  const start=new Date();
+  dt.value=toInput(start);
+  run(start);
+  dt.addEventListener('change',()=>{if(dt.value) run(fromInput(dt.value));});
+  document.getElementById('now').addEventListener('click',()=>{const n=new Date();dt.value=toInput(n);run(n);});
+  document.getElementById('copy').addEventListener('click',()=>{
+    navigator.clipboard.writeText(lastText).then(()=>{msg.textContent="コピーしました。そのままClaudeに貼れます";})
+    .catch(()=>{msg.textContent="コピーできませんでした。下の文章を長押しで選んでください";
+      let ta=document.getElementById('fallback');
+      if(!ta){ta=document.createElement('textarea');ta.id='fallback';ta.style.cssText='width:100%;min-height:12em;font:inherit;font-size:.8rem;color:var(--fg);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:8px';document.querySelector('header').appendChild(ta);}
+      ta.value=lastText;ta.focus();ta.select();});
+  });
+})();
+</script>
+</body>
+</html>

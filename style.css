@@ -15,9 +15,9 @@
   --line: #393549;        /* 枠線 */
   --fg: #efeaf1;          /* 文字 */
   --muted: #a09bb0;       /* 薄い文字 */
-  --accent: #a9a8f2;      /* アクセント：藤色寄りの青紫 */
-  --on-accent: #17163a;   /* アクセント上の文字 */
-  --accent-weak: rgba(169, 168, 242, 0.16);
+  --accent: #dc9aae;      /* アクセント：春千夜カラー（くすみローズピンク） */
+  --on-accent: #2b1019;   /* アクセント上の文字 */
+  --accent-weak: rgba(220, 154, 174, 0.16);
   --gold: #f2c450;        /* ハルの目の色（小さな差し色） */
   --danger: #ef8a7e;
   --on-danger: #2a1210;
@@ -44,9 +44,9 @@
   --line: #e0d6de;
   --fg: #251f29;
   --muted: #6d6575;
-  --accent: #5652b8;
+  --accent: #a9506c;      /* 春千夜カラー（明るい地でも読める濃さ） */
   --on-accent: #ffffff;
-  --accent-weak: rgba(86, 82, 184, 0.1);
+  --accent-weak: rgba(169, 80, 108, 0.1);
   --gold: #b07d12;
   --danger: #b3392d;
   --on-danger: #ffffff;
@@ -373,7 +373,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
 
 .home-foot {
   display: grid;
-  grid-template-columns: 1.25fr 1fr; /* 左のボタンの文字が長いので少し広く */
+  grid-template-columns: 1fr; /* 「わたし、何してた？」を隠したので、「あとで見る」を横いっぱいに */
   gap: 0.75rem;
 }
 .home-foot .btn {
@@ -903,7 +903,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   .btn { transition: none; }
 }
 
-/* ---------- 下のメニュー（ホーム・描く・ふりかえり） ----------
+/* ---------- 下のメニュー（ホーム・描く・リスト・アプリ・ふりかえり） ----------
    画面の一番下に固定。メニューがある画面では、下にその分の余白を足す。 */
 :root { --tabbar-h: calc(4rem + env(safe-area-inset-bottom, 0px)); }
 .tabbar {
@@ -913,7 +913,7 @@ input[type="date"].field::-webkit-date-and-time-value { text-align: left; margin
   bottom: 0;
   z-index: 9; /* 迷子救済（10）より下、お知らせ（20）より下 */
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   max-width: 34rem;
   margin: 0 auto;
   padding: 0.35rem 0.5rem env(safe-area-inset-bottom, 0px);
@@ -1044,3 +1044,65 @@ body.has-tabbar .toast { bottom: calc(var(--tabbar-h) + 12px); }
 .sync-form .field { flex: 1; min-width: 0; }
 .sync-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 #sync-code { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; word-break: break-all; }
+
+/* ---------- リスト（やりたいこと・目標／js/ui-lists.js） ---------- */
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+  padding: 0.3rem;
+  border-radius: 999px;
+  background: var(--surface);
+}
+.seg button {
+  appearance: none; border: 0; font: inherit; font-weight: 700; font-size: 1rem;
+  padding: 0.55rem 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.list-lead { color: var(--muted); font-size: 0.95rem; margin: 0; }
+.list-form { display: flex; flex-direction: column; gap: 0.6rem; }
+.list-form .row { display: flex; gap: 0.5rem; }
+.list-form .field { flex: 1; min-width: 0; }
+.list-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.list-item {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.85rem 0.9rem; border-radius: 18px; background: var(--surface);
+}
+.list-check {
+  appearance: none; flex: none; width: 1.7rem; height: 1.7rem; margin-top: 0.05rem;
+  border-radius: 50%; border: 2px solid var(--line); background: none; cursor: pointer;
+  display: grid; place-items: center; color: var(--on-accent); padding: 0;
+}
+.list-check svg { width: 1rem; height: 1rem; opacity: 0; }
+.list-item.is-done .list-check { background: var(--accent); border-color: var(--accent); }
+.list-item.is-done .list-check svg { opacity: 1; }
+.list-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.list-text { overflow-wrap: anywhere; line-height: 1.5; }
+.list-item.is-done .list-text { color: var(--muted); }
+.list-meta { color: var(--muted); font-size: 0.82rem; }
+.list-when { color: var(--accent); }
+.list-del {
+  appearance: none; flex: none; border: 0; background: none; color: var(--muted);
+  font: inherit; font-size: 0.82rem; padding: 0.2rem 0.3rem; cursor: pointer; border-radius: 8px;
+}
+.list-del.is-armed { color: var(--danger); font-weight: 700; }
+.list-sub { color: var(--muted); font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; margin: 0.4rem 0 0; }
+
+/* ---------- アプリ（天象帳・PALETTE LOG・夜明け前暗室） ---------- */
+.app-cards { display: flex; flex-direction: column; gap: 0.75rem; }
+.app-card {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.1rem; border-radius: var(--radius);
+  background: var(--surface); color: var(--fg); text-decoration: none;
+  border: 1.5px solid transparent;
+}
+.app-card:active { transform: scale(0.98); border-color: var(--accent); }
+.app-icon {
+  flex: none; width: 3.2rem; height: 3.2rem; border-radius: 16px;
+  display: grid; place-items: center; background: var(--accent-weak); color: var(--accent);
+}
+.app-icon svg { width: 1.7rem; height: 1.7rem; }
+.app-name { font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; }
+.app-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+.app-go { margin-left: auto; color: var(--muted); flex: none; }
+.app-go svg { width: 1.2rem; height: 1.2rem; }

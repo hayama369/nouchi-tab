@@ -38,11 +38,13 @@ const Sync = (() => {
     current: 'noutab.currentTask',
     draw: 'noutab.draw',
     routine: 'noutab.routine',
+    wishes: 'noutab.wishes', // やりたいこと（長期）
+    goals: 'noutab.goals', // 目標
   };
-  const ARRAYS = { tabs: DATA.tabs, history: DATA.history, mumbles: DATA.mumbles };
+  const ARRAYS = { tabs: DATA.tabs, history: DATA.history, mumbles: DATA.mumbles, wishes: DATA.wishes, goals: DATA.goals };
   // この版が知っている記録の種類。知らない種類（新しい版で増えたもの）は、消したことにして送らない。
   // ※ 古い版が「知らない記録＝消えた」と送ってしまい、新しい版のデータが消える事故を防ぐため
-  const KNOWN_COLS = ['tabs', 'history', 'mumbles', 'meta', 'draw', 'routine', 'images'];
+  const KNOWN_COLS = ['tabs', 'history', 'mumbles', 'meta', 'draw', 'routine', 'images', 'wishes', 'goals'];
   // 消した知らせを受け取っても消さない種類（古い版からの「消えた」を無視する）
   const KEEP_ON_DELETE = ['routine'];
 

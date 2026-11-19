@@ -22,7 +22,7 @@
   const on = (id, event, fn) => $(id).addEventListener(event, fn);
 
   // 下のメニューを出す画面（ここにない画面ではメニューを隠す）
-  const TAB_SCREENS = ['home', 'draw', 'review'];
+  const TAB_SCREENS = ['home', 'draw', 'lists', 'apps', 'review'];
 
   let current = 'home'; // いま表示中の画面
   let editing = false; // ホームで「変更」中か
@@ -46,6 +46,7 @@
     }
     if (name === 'detail') LaterUI.renderDetail();
     if (name === 'draw') DrawUI.render();
+    if (name === 'lists') ListsUI.render();
     UI.showScreen(name);
     updateTabbar(name);
     Badge.update(); // アイコンの数字を合わせる
@@ -383,10 +384,10 @@
   // （iPhoneの「ショートカット」アプリのウィジェットから開く用）
   function handleHash() {
     const hash = location.hash;
-    if (!['#capture', '#draw'].includes(hash)) return;
+    if (!['#capture', '#draw', '#lists', '#apps'].includes(hash)) return;
     history.replaceState(null, '', location.pathname + location.search);
     if (hash === '#capture') openCapture();
-    else go('draw');
+    else go(hash.slice(1));
   }
 
   // =========================================================
@@ -460,6 +461,7 @@
   window.addEventListener('storage', () => {
     if (current === 'home' && !editing) UI.renderHome({ showCheck: shouldCheck() });
     if (current === 'later') LaterUI.renderList();
+    if (current === 'lists') ListsUI.render();
   });
 
   // ほかの端末から同期で届いたとき：いまの画面を描き直す
@@ -469,6 +471,7 @@
     if (current === 'detail') LaterUI.renderDetail();
     if (current === 'review') ReviewUI.render();
     if (current === 'draw') DrawUI.render();
+    if (current === 'lists') ListsUI.render();
     Badge.update();
   });
 
