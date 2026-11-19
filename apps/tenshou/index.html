@@ -87,6 +87,26 @@ td.sym{color:var(--muted);width:1.5em}
 footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+/* 空の図（ホロスコープの円）。左が牡羊座0°、反時計回り */
+:root{--asp-hard:#b0605a;--asp-soft:#5f86b0}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--asp-hard:#d98f88;--asp-soft:#8fb3d8}}
+:root[data-theme="dark"]{--asp-hard:#d98f88;--asp-soft:#8fb3d8}
+.chartbox{display:flex;flex-direction:column;align-items:center;gap:10px}
+.chartbox svg{width:100%;max-width:420px;height:auto;display:block}
+.ch-ring{fill:none;stroke:var(--line)}
+.ch-band{fill:var(--paper);stroke:var(--line)}
+.ch-div{stroke:var(--line)}
+.ch-sign{fill:var(--muted);font-size:18px;text-anchor:middle;dominant-baseline:central}
+.ch-sign.fire{fill:#c0724f}.ch-sign.earth{fill:#7d8c4e}.ch-sign.air{fill:#b39a3c}.ch-sign.water{fill:#5f86b0}
+.ch-tick{stroke:var(--muted);stroke-width:1}
+.ch-planet{fill:var(--fg);font-size:20px;text-anchor:middle;dominant-baseline:central}
+.ch-planet.slow{fill:var(--muted)}
+.ch-r{fill:var(--retro);font-size:9px;text-anchor:middle;dominant-baseline:central}
+.ch-hard{stroke:var(--asp-hard);stroke-width:1.4}
+.ch-soft{stroke:var(--asp-soft);stroke-width:1.4}
+.ch-legend{font-size:.75rem;color:var(--muted);text-align:center;margin:0;line-height:1.7}
+.ch-legend i{display:inline-block;width:1.6em;height:0;border-top:2px solid;vertical-align:middle;margin:0 .3em 0 .8em}
+
 /* 脳内タブへ戻る（脳内タブに取り込んだときに足したもの） */
 .nt-back{display:inline-flex;align-self:flex-start;width:fit-content;align-items:center;gap:.3em;margin:0 0 6px;padding:6px 12px 6px 9px;border:1px solid var(--line);border-radius:3px;color:var(--accent);background:var(--paper);font-size:.8rem;text-decoration:none;font-family:inherit}
 .nt-back svg{width:14px;height:14px}
@@ -109,6 +129,14 @@ footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
   <section aria-labelledby="h-sum">
     <h2 id="h-sum">今日のまとめ</h2>
     <div class="summary" id="summary"><p>計算しています…</p></div>
+  </section>
+
+  <section aria-labelledby="h-chart">
+    <h2 id="h-chart">空の図<span class="hint">左が牡羊座、反時計回り</span></h2>
+    <div class="chartbox">
+      <svg id="chart" viewBox="0 0 400 400" role="img" aria-label="今の空のホロスコープの図"></svg>
+      <p class="ch-legend"><i style="color:var(--asp-hard)"></i>90°・180°（ぶつかる）<i style="color:var(--asp-soft)"></i>60°・120°（流れる）<br>Rは逆行。0°（重なり）は線なし、記号が並びます</p>
+    </div>
   </section>
 
   <section aria-labelledby="h-moon">
@@ -388,6 +416,7 @@ if(typeof module!=="undefined") module.exports=makeCalc;
       <dt>新月・満月</dt><dd>満月 ${full(mi.nextFull)}<br>新月 ${full(mi.nextNew)}</dd>`;
 
     drawMoon(mi.phase);
+    drawChart(pos,asp);
 
     // 六 天体ショー
     document.getElementById('shows').innerHTML = shows(date).map(s=>`<li class="${s.key?'key':''}"><span class="when-col"><b>${rel(s.time,date)}</b>${md(s.time)}${s.clock?`<br>${hm(s.time)}`:""}</span><span class="what">${s.title}<small>${s.sub}</small></span></li>`).join("");
@@ -462,6 +491,60 @@ if(typeof module!=="undefined") module.exports=makeCalc;
     svg.innerHTML=`<circle class="mdark" cx="${cx}" cy="${cy}" r="${r}"/>${q>179.5?`<circle class="mlit" cx="${cx}" cy="${cy}" r="${r}"/>`:lit}<circle class="mring" cx="${cx}" cy="${cy}" r="${r}"/>`;
     const frac=(1-Math.cos(p*Math.PI/180))/2;
     document.getElementById('moonpct').textContent=`輝いている面 ${Math.round(frac*100)}%`;
+  }
+
+  // 空の図（ホロスコープの円）を描く
+  // 左（9時の位置）が牡羊座0°。そこから反時計回りに星座が進む。ハウスは使わない（今日の空だけ）
+  function drawChart(pos,asp){
+    const svg=document.getElementById('chart');
+    const cx=200, cy=200;
+    const R_OUT=192, R_SIGN=160, R_PLANET=134, R_TICK=152, R_ASP=104;
+    // 黄経 → 座標（左が0°、反時計回り）
+    const pt=(lonDeg,r)=>{const a=(180+lonDeg)*Math.PI/180;return [cx+r*Math.cos(a), cy-r*Math.sin(a)];};
+    const f=n=>n.toFixed(1);
+    const GLYPH=["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"].map(g=>g+"︎");
+    const ELEM=["fire","earth","air","water"];
+    let s="";
+    // 外の輪と、星座の帯
+    s+=`<circle class="ch-band" cx="${cx}" cy="${cy}" r="${R_OUT}"/>`;
+    s+=`<circle class="ch-ring" cx="${cx}" cy="${cy}" r="${R_SIGN}"/>`;
+    s+=`<circle class="ch-ring" cx="${cx}" cy="${cy}" r="${R_ASP}"/>`;
+    for(let i=0;i<12;i++){
+      const [x1,y1]=pt(i*30,R_SIGN), [x2,y2]=pt(i*30,R_OUT);
+      s+=`<line class="ch-div" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"/>`;
+      const [tx,ty]=pt(i*30+15,(R_SIGN+R_OUT)/2);
+      s+=`<text class="ch-sign ${ELEM[i%4]}" x="${f(tx)}" y="${f(ty)}">${GLYPH[i]}<title>${C.SIGNS[i]}</title></text>`;
+    }
+    // 5°ごとの小さい目盛り
+    for(let d=0;d<360;d+=5){ if(d%30===0) continue;
+      const [x1,y1]=pt(d,R_SIGN), [x2,y2]=pt(d,R_SIGN-(d%10===0?5:3));
+      s+=`<line class="ch-div" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"/>`;
+    }
+    // 角度の線（内側の円の上で結ぶ）。0°は線を引かない
+    for(const a of asp){ if(a.asp.deg===0) continue;
+      const hard=a.asp.deg===90||a.asp.deg===180;
+      const [x1,y1]=pt(a.a.lon,R_ASP), [x2,y2]=pt(a.b.lon,R_ASP);
+      s+=`<line class="${hard?'ch-hard':'ch-soft'}" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"><title>${a.a.ja}と${a.b.ja} ${a.asp.short}（誤差${a.orb.toFixed(1)}°）</title></line>`;
+    }
+    // 天体の記号。近すぎるものは表示位置だけ少しずらす（本当の位置は目盛りの線で示す）
+    const items=pos.map(p=>({p,show:p.lon})).sort((x,y)=>x.show-y.show);
+    const GAP=9;
+    for(let k=0;k<30;k++){ let moved=false;
+      for(let i=0;i<items.length;i++){
+        const a=items[i], b=items[(i+1)%items.length];
+        let d=((b.show-a.show)+360)%360; if(items.length<2) break;
+        if(d<GAP){ const push=(GAP-d)/2; a.show-=push; b.show+=push; moved=true; }
+      }
+      if(!moved) break;
+    }
+    for(const it of items){ const p=it.p;
+      const [t1x,t1y]=pt(p.lon,R_SIGN), [t2x,t2y]=pt(p.lon,R_TICK);
+      s+=`<line class="ch-tick" x1="${f(t1x)}" y1="${f(t1y)}" x2="${f(t2x)}" y2="${f(t2y)}"/>`;
+      const [px,py]=pt(it.show,R_PLANET);
+      s+=`<text class="ch-planet ${p.fast?'':'slow'}" x="${f(px)}" y="${f(py)}">${p.sym}︎<title>${p.ja} ${C.SIGNS[p.sign]} ${p.deg}${p.retro?' 逆行':''}</title></text>`;
+      if(p.retro && !p.station){ const [rx,ry]=pt(it.show,R_PLANET-15); s+=`<text class="ch-r" x="${f(rx)}" y="${f(ry)}">R</text>`; }
+    }
+    svg.innerHTML=s;
   }
 
   // 天体ショー：月食・日食・流星群
