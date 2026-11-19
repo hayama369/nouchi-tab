@@ -87,7 +87,7 @@ td.sym{color:var(--muted);width:1.5em}
 footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
-/* 空の図（ホロスコープの円）。左が牡羊座0°、反時計回り */
+/* 空の図（ホロスコープの円）。左がASC（東の地平線）、反時計回り。ハウスはプラシーダス、場所は東京 */
 :root{--asp-hard:#b0605a;--asp-soft:#5f86b0}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--asp-hard:#d98f88;--asp-soft:#8fb3d8}}
 :root[data-theme="dark"]{--asp-hard:#d98f88;--asp-soft:#8fb3d8}
@@ -102,6 +102,10 @@ footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
 .ch-planet{fill:var(--fg);font-size:20px;text-anchor:middle;dominant-baseline:central}
 .ch-planet.slow{fill:var(--muted)}
 .ch-r{fill:var(--retro);font-size:9px;text-anchor:middle;dominant-baseline:central}
+.ch-house{stroke:var(--line);stroke-width:1}
+.ch-axis{stroke:var(--muted);stroke-width:1.4}
+.ch-hnum{fill:var(--muted);font-size:10px;text-anchor:middle;dominant-baseline:central}
+.ch-axisname{fill:var(--accent);font-size:10px;text-anchor:middle;dominant-baseline:central;letter-spacing:.05em}
 .ch-hard{stroke:var(--asp-hard);stroke-width:1.4}
 .ch-soft{stroke:var(--asp-soft);stroke-width:1.4}
 .ch-legend{font-size:.75rem;color:var(--muted);text-align:center;margin:0;line-height:1.7}
@@ -132,10 +136,10 @@ footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
   </section>
 
   <section aria-labelledby="h-chart">
-    <h2 id="h-chart">空の図<span class="hint">左が牡羊座、反時計回り</span></h2>
+    <h2 id="h-chart">空の図<span class="hint">ハウスは東京で計算</span></h2>
     <div class="chartbox">
-      <svg id="chart" viewBox="0 0 400 400" role="img" aria-label="今の空のホロスコープの図"></svg>
-      <p class="ch-legend"><i style="color:var(--asp-hard)"></i>90°・180°（ぶつかる）<i style="color:var(--asp-soft)"></i>60°・120°（流れる）<br>Rは逆行。0°（重なり）は線なし、記号が並びます</p>
+      <svg id="chart" viewBox="-22 -22 444 444" role="img" aria-label="今の空のホロスコープの図"></svg>
+      <p class="ch-legend">左がASC（東の地平線）。太い線がASCとMC。数字はハウス（プラシーダス）<br><i style="color:var(--asp-hard)"></i>90°・180°（ぶつかる）<i style="color:var(--asp-soft)"></i>60°・120°（流れる）<br>Rは逆行。0°（重なり）は線なし、記号が並びます</p>
     </div>
   </section>
 
@@ -164,7 +168,7 @@ footer{color:var(--muted);font-size:.75rem;text-align:center;line-height:1.7}
 
   <section aria-labelledby="h-pos">
     <h2 id="h-pos"><span class="n">五</span>全天体の位置<span class="hint">木星から外は背景</span></h2>
-    <div class="tablewrap"><table><thead><tr><th></th><th>天体</th><th>星座</th><th>度数</th><th>運行</th></tr></thead><tbody id="pos"></tbody></table></div>
+    <div class="tablewrap"><table><thead><tr><th></th><th>天体</th><th>星座</th><th>度数</th><th>ハウス</th><th>運行</th></tr></thead><tbody id="pos"></tbody></table></div>
   </section>
 
   <section aria-labelledby="h-show">
@@ -369,7 +373,40 @@ function makeCalc(A){
     for(let k=0;k<4;k++){const nm=A.SearchMoonQuarter(s); if(!nm||nm.time.date.getTime()>t1) break; if(nm.quarter===0||nm.quarter===2){const ml=lon("Moon",nm.time.date);ev.push({time:nm.time.date,kind:nm.quarter===0?"new":"full",body:BODIES[1],text:`${SIGNS[signOf(ml)]}で${nm.quarter===0?"新月":"満月"}`});} s=new Date(nm.time.date.getTime()+3600000);}
     return ev.sort((a,b)=>a.time-b.time);
   }
-  return {SIGNS,BODIES,ASPECTS,lon,speed,signOf,fmtDeg,positions,aspectsNow,retroPeriods,upcoming,voidInfo,moonInfo,nextIngress};
+  // ハウス（プラシーダス）。lat・lonは観測する場所（北緯・東経）。cusps[0]が1ハウス（ASC）、cusps[9]が10ハウス（MC）
+  function houses(date,lat,lonE){
+    const rad=Math.PI/180, deg=180/Math.PI;
+    const time=A.MakeTime(date);
+    const eps=A.e_tilt(time).tobl*rad;            // 黄道の傾き
+    const ramc=norm(A.SiderealTime(date)*15+lonE); // 南中している赤経
+    const phi=lat*rad;
+    const raToLon=ra=>norm(Math.atan2(Math.sin(ra*rad),Math.cos(ra*rad)*Math.cos(eps))*deg);
+    const mc=raToLon(ramc);
+    const asc=norm(Math.atan2(Math.cos(ramc*rad),-(Math.sin(ramc*rad)*Math.cos(eps)+Math.tan(phi)*Math.sin(eps)))*deg);
+    // 半弧を3等分する点を、くり返し計算で求める
+    function cusp(frac,below){
+      let ra=below? ramc+180-frac*90 : ramc+frac*90, l=raToLon(ra);
+      for(let i=0;i<30;i++){
+        const dec=Math.asin(Math.sin(eps)*Math.sin(l*rad));
+        let x=Math.tan(phi)*Math.tan(dec); x=Math.max(-1,Math.min(1,x));
+        const ad=Math.asin(x)*deg;
+        ra = below ? ramc+180-frac*(90-ad) : ramc+frac*(90+ad);
+        const l2=raToLon(ra); if(Math.abs(sdiff(l2-l))<1e-6){l=l2;break;} l=l2;
+      }
+      return l;
+    }
+    const c11=cusp(1/3,false), c12=cusp(2/3,false), c2=cusp(2/3,true), c3=cusp(1/3,true);
+    const cusps=[asc,c2,c3,norm(mc+180),norm(c11+180),norm(c12+180),norm(asc+180),norm(c2+180),norm(c3+180),mc,c11,c12];
+    return {asc,mc,cusps};
+  }
+  // 黄経がどのハウスに入るか（1〜12）
+  function houseOf(l,cusps){
+    for(let i=0;i<12;i++){ const a=cusps[i], b=cusps[(i+1)%12];
+      if(norm(l-a) < norm(b-a)) return i+1; }
+    return 1;
+  }
+
+  return {SIGNS,BODIES,ASPECTS,lon,speed,signOf,fmtDeg,positions,aspectsNow,retroPeriods,upcoming,voidInfo,moonInfo,nextIngress,houses,houseOf};
 }
 if(typeof module!=="undefined") module.exports=makeCalc;
 
@@ -380,6 +417,8 @@ if(typeof module!=="undefined") module.exports=makeCalc;
   const C=makeCalc(Astronomy);
   const DAY=86400000;
   const tz={timeZone:'Asia/Tokyo'};
+  // ハウスを計算する場所（今は東京）。別の場所にしたいときはここを変える
+  const HOUSE_PLACE={name:"東京",lat:35.68,lon:139.77};
   const ymd=d=>d.toLocaleDateString('sv-SE',tz);
   const md=d=>{const p=new Intl.DateTimeFormat('ja-JP',{...tz,month:'numeric',day:'numeric',weekday:'short'}).formatToParts(d);const g=t=>p.find(x=>x.type===t).value;return `${g('month')}/${g('day')}（${g('weekday')}）`;};
   const hm=d=>d.toLocaleTimeString('ja-JP',{...tz,hour:'2-digit',minute:'2-digit'});
@@ -416,7 +455,8 @@ if(typeof module!=="undefined") module.exports=makeCalc;
       <dt>新月・満月</dt><dd>満月 ${full(mi.nextFull)}<br>新月 ${full(mi.nextNew)}</dd>`;
 
     drawMoon(mi.phase);
-    drawChart(pos,asp);
+    const hs=C.houses(date,HOUSE_PLACE.lat,HOUSE_PLACE.lon);
+    drawChart(pos,asp,hs);
 
     // 六 天体ショー
     document.getElementById('shows').innerHTML = shows(date).map(s=>`<li class="${s.key?'key':''}"><span class="when-col"><b>${rel(s.time,date)}</b>${md(s.time)}${s.clock?`<br>${hm(s.time)}`:""}</span><span class="what">${s.title}<small>${s.sub}</small></span></li>`).join("");
@@ -445,7 +485,7 @@ if(typeof module!=="undefined") module.exports=makeCalc;
     }).join("") : `<li><span></span><p class="empty">逆行中の天体はありません</p></li>`;
 
     // 五 全天体
-    document.getElementById('pos').innerHTML = pos.map(p=>`<tr class="${p.fast?'':'slow'}"><td class="sym">${p.sym}</td><td class="name">${p.ja}</td><td>${C.SIGNS[p.sign]}</td><td>${p.deg}</td><td>${p.station?`<span class="chip st">留</span>`:p.retro?'<span class="chip r">逆行</span>':'順行'}</td></tr>`).join("");
+    document.getElementById('pos').innerHTML = [{ja:"ASC",lon:hs.asc},{ja:"MC",lon:hs.mc}].map(a=>`<tr class="slow"><td class="sym"></td><td class="name">${a.ja}</td><td>${C.SIGNS[C.signOf(a.lon)]}</td><td>${C.fmtDeg(a.lon)}</td><td>${a.ja==="ASC"?1:10}</td><td></td></tr>`).join("") + pos.map(p=>`<tr class="${p.fast?'':'slow'}"><td class="sym">${p.sym}</td><td class="name">${p.ja}</td><td>${C.SIGNS[p.sign]}</td><td>${p.deg}</td><td>${C.houseOf(p.lon,hs.cusps)}</td><td>${p.station?`<span class="chip st">留</span>`:p.retro?'<span class="chip r">逆行</span>':'順行'}</td></tr>`).join("");
 
     // まとめ
     const soon=ev.filter(e=>e.time>=date && e.time-date<2*DAY);
@@ -477,7 +517,8 @@ if(typeof module!=="undefined") module.exports=makeCalc;
       ...(rp.length?rp.map(r=>`${r.p.ja}（${C.SIGNS[r.p.sign]}）${r.p.station?"留 ":""}${r.start?md(r.start):"—"}〜${r.end?md(r.end):"—"}`):["なし"]),
       "",
       "■全天体",
-      ...pos.map(p=>`${p.ja} ${C.SIGNS[p.sign]} ${p.deg}${p.station?" 留":p.retro?" 逆行":""}`)
+      ...pos.map(p=>`${p.ja} ${C.SIGNS[p.sign]} ${p.deg} ${C.houseOf(p.lon,hs.cusps)}ハウス${p.station?" 留":p.retro?" 逆行":""}`),
+      `ASC ${C.SIGNS[C.signOf(hs.asc)]} ${C.fmtDeg(hs.asc)}／MC ${C.SIGNS[C.signOf(hs.mc)]} ${C.fmtDeg(hs.mc)}（ハウスは${HOUSE_PLACE.name}・プラシーダス）`
     ].join("\n");
   }
 
@@ -495,12 +536,13 @@ if(typeof module!=="undefined") module.exports=makeCalc;
 
   // 空の図（ホロスコープの円）を描く
   // 左（9時の位置）が牡羊座0°。そこから反時計回りに星座が進む。ハウスは使わない（今日の空だけ）
-  function drawChart(pos,asp){
+  function drawChart(pos,asp,hs){
     const svg=document.getElementById('chart');
     const cx=200, cy=200;
-    const R_OUT=192, R_SIGN=160, R_PLANET=134, R_TICK=152, R_ASP=104;
+    const R_OUT=176, R_SIGN=146, R_PLANET=122, R_TICK=139, R_ASP=96, R_HNUM=84;
     // 黄経 → 座標（左が0°、反時計回り）
-    const pt=(lonDeg,r)=>{const a=(180+lonDeg)*Math.PI/180;return [cx+r*Math.cos(a), cy-r*Math.sin(a)];};
+    // 黄経 → 座標。ASCが左（9時）に来るように回す
+    const pt=(lonDeg,r)=>{const a=(180+lonDeg-hs.asc)*Math.PI/180;return [cx+r*Math.cos(a), cy-r*Math.sin(a)];};
     const f=n=>n.toFixed(1);
     const GLYPH=["♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓"].map(g=>g+"︎");
     const ELEM=["fire","earth","air","water"];
@@ -525,6 +567,19 @@ if(typeof module!=="undefined") module.exports=makeCalc;
       const hard=a.asp.deg===90||a.asp.deg===180;
       const [x1,y1]=pt(a.a.lon,R_ASP), [x2,y2]=pt(a.b.lon,R_ASP);
       s+=`<line class="${hard?'ch-hard':'ch-soft'}" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"><title>${a.a.ja}と${a.b.ja} ${a.asp.short}（誤差${a.orb.toFixed(1)}°）</title></line>`;
+    }
+    // ハウスの線と番号。ASC・MCの線は太く、外まで伸ばして名前をつける
+    for(let i=0;i<12;i++){
+      const c=hs.cusps[i], axis=(i===0||i===9);
+      const [x1,y1]=pt(c,R_ASP), [x2,y2]=pt(c,axis?R_OUT+4:R_SIGN);
+      s+=`<line class="${axis?'ch-axis':'ch-house'}" x1="${f(x1)}" y1="${f(y1)}" x2="${f(x2)}" y2="${f(y2)}"/>`;
+      const next=hs.cusps[(i+1)%12], mid=c+(((next-c)+360)%360)/2;
+      const [nx,ny]=pt(mid,R_HNUM);
+      s+=`<text class="ch-hnum" x="${f(nx)}" y="${f(ny)}">${i+1}</text>`;
+    }
+    for(const [l,name] of [[hs.asc,"ASC"],[hs.mc,"MC"]]){
+      const [lx,ly]=pt(l,R_OUT+14);
+      s+=`<text class="ch-axisname" x="${f(lx)}" y="${f(ly)}">${name}</text>`;
     }
     // 天体の記号。近すぎるものは表示位置だけ少しずらす（本当の位置は目盛りの線で示す）
     const items=pos.map(p=>({p,show:p.lon})).sort((x,y)=>x.show-y.show);
